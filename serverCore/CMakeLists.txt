@@ -7,6 +7,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB CORE_FILES "*.h" "*.cpp")
 
+# Boost Asio 찾기
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
 # 실행파일 생성
 add_executable(serverCore
             ${CORE_FILES}

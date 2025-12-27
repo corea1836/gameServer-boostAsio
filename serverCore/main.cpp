@@ -2,7 +2,6 @@
 #include "Lock.h"
 #include "ThreadManager.h"
 #include "pch.h"
-#include <chrono>
 #include <cstdlib>
 #include <queue>
 #include <thread>
@@ -42,7 +41,7 @@ TestLock testLock;
 void ThreadWrite() {
     while (true) {
         testLock.TestPush();
-        this_thread::sleep_for(chrono::seconds(1));
+        this_thread::sleep_for(std::chrono::seconds(1));
         testLock.TestPop();
     }
 }
@@ -51,7 +50,7 @@ void ThreadRead() {
     while (true) {
         int32 value = testLock.TestRead();
         cout << value << endl;
-        this_thread::sleep_for(chrono::seconds(1));
+        this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 

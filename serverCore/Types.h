@@ -2,7 +2,10 @@
 
 #include <atomic>
 #include <cstdint>
+#include <memory>
 #include <mutex>
+
+#include <boost/asio.hpp>
 
 using namespace std;
 
@@ -19,3 +22,7 @@ using uint64 = uint64_t;
 template <typename T> using Atomic = atomic<T>;
 using Mutex = mutex;
 using LockGuard = lock_guard<Mutex>;
+
+using namespace boost::asio;
+using io_context = io_context;
+using work_guard = executor_work_guard<io_context::executor_type>;

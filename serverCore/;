@@ -1,0 +1,9 @@
+#pragma once
+
+#include "pch.h"
+
+class IoContext {
+    private:
+        io_context _networkIoContext;
+        io_context _gameIoContext;
+};
