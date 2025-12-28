@@ -7,15 +7,31 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB CORE_FILES "*.h" "*.cpp")
 
+# main 함수가 있는 파일 제거
+list(REMOVE_ITEM CORE_FILES
+"${CMAKE_CURRENT_SOURCE_DIR}/GameServer.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/DummyClient.cpp")
+
 # Boost Asio 찾기
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-# 실행파일 생성
-add_executable(serverCore
-            ${CORE_FILES}
-)
-
 # pthread 링크
 find_package(Threads REQUIRED)
-target_link_libraries(serverCore Threads::Threads)
+
+# 서버 실행 파일
+add_executable(GameServer
+    GameServer.cpp
+    ${CORE_FILES}
+)
+
+
+target_link_libraries(GameServer Threads::Threads)
+
+# 더미 클라이언트 실행 파일
+add_executable(DummyClient
+DummyClient.cpp
+${CORE_FILES})
+
+target_link_libraries(DummyClient
+Threads::Threads)

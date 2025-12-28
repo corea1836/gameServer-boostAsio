@@ -24,5 +24,11 @@ using Mutex = mutex;
 using LockGuard = lock_guard<Mutex>;
 
 using namespace boost::asio;
-using io_context = io_context;
+using boost_io_context = io_context;
 using work_guard = executor_work_guard<io_context::executor_type>;
+using boost_tcp = ip::tcp;
+using boost_error_code = boost::system::error_code;
+
+#define USING_SHARED_PTR(name) using name##Ref = shared_ptr<class name>;
+
+USING_SHARED_PTR(Session);

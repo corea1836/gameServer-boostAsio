@@ -22,6 +22,6 @@ void IoContext::Stop() {
     _gameIoContext.stop();
 }
 
-io_context &IoContext::GetNetworkIoContext() { return _networkIoContext; }
+boost_io_context &IoContext::GetNetworkIoContext() { return _networkIoContext; }
 
-io_context &IoContext::GetGameIoContext() { return _gameIoContext; }
+boost_io_context &IoContext::GetGameIoContext() { return _gameIoContext; }
