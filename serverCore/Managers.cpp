@@ -1,5 +1,6 @@
 #include "Managers.h"
 #include "Acceptor.h"
+#include "GameLoop.h"
 #include "IoContext.h"
 #include "SessionFactory.h"
 
@@ -15,6 +16,7 @@ void Managers::Init(uint16 port) {
     InitIoContext();
     InitSessionManager();
     InitAcceptor();
+    InitGameManager();
     _ready.exchange(true);
 }
 
@@ -23,10 +25,11 @@ void Managers::InitPort(uint16 port) { _port = port; }
 void Managers::InitIoContext() { _ioContext = make_unique<IoContext>(); }
 
 IoContext &Managers::IoContextManager() {
-    if (!_ready || !_ioContext) {
+    auto &instance = Managers::Instance();
+    if (!instance._ready || !instance._ioContext) {
     }
 
-    return *_ioContext;
+    return *instance._ioContext;
 }
 
 void Managers::InitSessionManager() {
@@ -34,10 +37,11 @@ void Managers::InitSessionManager() {
 }
 
 SessionFactory &Managers::SessionManager() {
-    if (!_ready || !_sessionManager) {
+    auto &instance = Managers::Instance();
+    if (!instance._ready || !instance._sessionManager) {
     }
 
-    return *_sessionManager;
+    return *instance._sessionManager;
 }
 
 void Managers::InitAcceptor() {
@@ -47,8 +51,22 @@ void Managers::InitAcceptor() {
 }
 
 Acceptor &Managers::AcceptorManager() {
-    if (!_ready || !_acceptor) {
+    auto &instance = Managers::Instance();
+    if (!instance._ready || !instance._acceptor) {
     }
 
-    return *_acceptor;
+    return *instance._acceptor;
+}
+
+void Managers::InitGameManager() {
+    _gameManager = make_shared<GameLoop>(IoContextManager().GetGameIoContext());
+}
+
+GameLoop &Managers::GameManager() {
+    auto &instance = Managers::Instance();
+    if (!instance._ready || !instance._gameManager) {
+        cerr << "gameManager not found" << endl;
+    }
+
+    return *instance._gameManager;
 }

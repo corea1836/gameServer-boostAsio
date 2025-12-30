@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GameLoop.h"
 #include "pch.h"
 
 class IoContext;
@@ -17,9 +18,10 @@ class Managers {
         void Init(uint16 port);
 
         // Getter
-        IoContext &IoContextManager();
-        SessionFactory &SessionManager();
-        Acceptor &AcceptorManager();
+        static IoContext &IoContextManager();
+        static SessionFactory &SessionManager();
+        static Acceptor &AcceptorManager();
+        static GameLoop &GameManager();
 
     public:
         Managers(const Managers &) = delete;
@@ -33,11 +35,13 @@ class Managers {
         void InitIoContext();
         void InitSessionManager();
         void InitAcceptor();
+        void InitGameManager();
 
     private:
         unique_ptr<IoContext> _ioContext;
         unique_ptr<SessionFactory> _sessionManager;
         unique_ptr<Acceptor> _acceptor;
+        shared_ptr<GameLoop> _gameManager;
 
     private:
         uint16 _port = 0;

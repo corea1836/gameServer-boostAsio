@@ -2,6 +2,7 @@
 #include "IoContext.h"
 #include "Managers.h"
 #include "PacketHandler.h"
+#include "SessionFactory.h"
 
 Session::Session(uint16 id)
     : _id(id),
@@ -23,8 +24,12 @@ void Session::DisConnect() {
             cout << "Disconnect Fail " << _id << " " << ec.message() << endl;
         }
     }
-
+    OnDisConnected();
     cout << "Disconnect Success " << _id << endl;
+}
+
+void Session::OnDisConnected() {
+    Managers::SessionManager().RemoveSession(GetSessionptr());
 }
 
 void Session::AsyncRecv() {
@@ -162,4 +167,5 @@ void Session::HandleError(boost_error_code ec) {
 
 void Session::OnConnected() {
     cout << "Hello I am Session " << _id << "." << endl;
+    _connected.exchange(true);
 }

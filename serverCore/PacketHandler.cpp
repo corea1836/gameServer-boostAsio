@@ -1,4 +1,5 @@
 #include "PacketHandler.h"
+#include "Managers.h"
 #include "Session.h"
 
 PacketHandlerFunc GPacketHandler[UINT16_MAX];
@@ -12,6 +13,8 @@ bool Handle_C_Test(SessionRef &session, Protocol::C_Test &pkt) {
     auto sendBuffer =
         PacketHandler::MakeSendBuffer(sConnectPkt, PKT_S_CONNECTED);
 
-    session->Send(sendBuffer);
+    Managers::GameManager().DoAsync(
+        [sendBuffer]() { Managers::GameManager().Broadcast(sendBuffer); });
+
     return true;
 }
