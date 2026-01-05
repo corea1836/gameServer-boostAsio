@@ -3,6 +3,8 @@
 // clang-format off
 #include "Types.h"
 #include "CoreTLS.h"
+#include "CoreMacro.h"
+#include "TimeUtils.h"
 // clang-format on
 
 #include <functional>
