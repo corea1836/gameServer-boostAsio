@@ -2,8 +2,6 @@
 #include "Acceptor.h"
 #include "IoContext.h"
 #include "SessionFactory.h"
-#include "Types.h"
-#include <memory>
 
 Managers::Managers()
     : _ioContext(nullptr),

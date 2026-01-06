@@ -1,5 +1,6 @@
 #include "SessionFactory.h"
 #include "Session.h"
+
 SessionFactory::SessionFactory() {}
 
 SessionFactory::~SessionFactory() {}

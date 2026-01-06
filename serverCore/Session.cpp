@@ -1,7 +1,6 @@
 #include "Session.h"
 #include "IoContext.h"
 #include "Managers.h"
-#include "Types.h"
 
 Session::Session(uint16 id)
     : _id(id),

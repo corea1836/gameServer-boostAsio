@@ -1,9 +1,7 @@
 #pragma once
 
-#include "Types.h"
 #include "pch.h"
 
-class IoContext;
 using SessionFactoryFunc = function<SessionRef(void)>;
 
 class Acceptor {
