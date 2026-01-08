@@ -16,22 +16,42 @@ list(REMOVE_ITEM CORE_FILES
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
+# Protobuf 찾기
+find_package(Protobuf REQUIRED)
+include_directories(${Protobuf_INCLUDE_DIRS})
+
+# Protubuf 생성 파일 추가
+set(PROTO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/protobuf)
+include_directories(${PROTO_DIR})
+file(GLOB PROTO_FILES
+    "${PROTO_DIR}/*.pb.cc"
+    "${PROTO_DIR}/*.pb.h"
+)
+
 # pthread 링크
 find_package(Threads REQUIRED)
 
 # 서버 실행 파일
 add_executable(GameServer
-    GameServer.cpp
-    ${CORE_FILES}
+            GameServer.cpp
+            ${CORE_FILES}
+            ${PROTO_FILES}
 )
 
 
-target_link_libraries(GameServer Threads::Threads)
+target_link_libraries(GameServer 
+                    Threads::Threads
+                    ${Protobuf_LIBRARIES}
+)
 
 # 더미 클라이언트 실행 파일
 add_executable(DummyClient
-DummyClient.cpp
-${CORE_FILES})
+            DummyClient.cpp
+            ${CORE_FILES}
+            ${PROTO_FILES}
+)
 
 target_link_libraries(DummyClient
-Threads::Threads)
+                    Threads::Threads
+                    ${Protobuf_LIBRARIES}
+)
