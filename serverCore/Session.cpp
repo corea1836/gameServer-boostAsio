@@ -129,11 +129,11 @@ void Session::ProcessWrite() {
 
         boostBuffers.push_back(buffer(sendBuffer->Buffer(), writeSize));
     }
+
     async_write(
         _socket, boostBuffers,
         [this, session = GetSessionptr()](boost_error_code ec, size_t len) {
-            _sendingBuffers.clear();
-
+            session->_sendingBuffers.clear();
             if (ec) {
                 HandleError(ec);
                 return;
