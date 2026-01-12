@@ -21,7 +21,7 @@ class Managers {
         SessionFactory &SessionManager();
         Acceptor &AcceptorManager();
 
-    private:
+    public:
         Managers(const Managers &) = delete;
         Managers &operator=(const Managers &) = delete;
 

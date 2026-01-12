@@ -1,11 +1,13 @@
 #pragma once
 
 #include <atomic>
+#include <boost/asio.hpp>
+#include <cstddef>
 #include <cstdint>
+#include <deque>
+#include <iostream>
 #include <memory>
 #include <mutex>
-
-#include <boost/asio.hpp>
 
 using namespace std;
 
@@ -32,3 +34,4 @@ using boost_error_code = boost::system::error_code;
 #define USING_SHARED_PTR(name) using name##Ref = shared_ptr<class name>;
 
 USING_SHARED_PTR(Session);
+USING_SHARED_PTR(SendBuffer);
