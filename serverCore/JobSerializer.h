@@ -2,9 +2,7 @@
 
 #include "Job.h"
 #include "LockQueue.h"
-#include "Types.h"
 #include "pch.h"
-#include <memory>
 
 class JobSerializer : public enable_shared_from_this<JobSerializer> {
     public:

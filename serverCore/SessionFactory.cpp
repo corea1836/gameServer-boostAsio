@@ -1,7 +1,5 @@
 #include "SessionFactory.h"
-#include "CoreMacro.h"
 #include "Session.h"
-#include "Types.h"
 
 SessionFactory::SessionFactory() {}
 
@@ -22,6 +20,7 @@ SessionRef SessionFactory::CreateSession() {
 
 void SessionFactory::RemoveSession(SessionRef session) {
     WRITE_LOCK;
+    cout << "Session Remove " << session->GetId() << endl;
     ASSERT_CRASH(_sessions.erase(session->GetId()) != 0);
 }
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "GameLoop.h"
 #include "pch.h"
 
 class IoContext;
 class Acceptor;
 class SessionFactory;
+class GameLoop;
 
 class Managers {
     public:

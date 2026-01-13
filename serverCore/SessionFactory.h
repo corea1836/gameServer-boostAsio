@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Lock.h"
-#include "Types.h"
 #include "pch.h"
-#include <unordered_map>
 
 class SessionFactory {
     public:

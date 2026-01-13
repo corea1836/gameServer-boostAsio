@@ -12,7 +12,7 @@ Session::Session(uint16 id)
 Session::~Session() {}
 
 void Session::DisConnect() {
-    if (_connected.exchange(true))
+    if (!_connected.exchange(false))
         return;
 
     boost_error_code ec;
@@ -68,7 +68,7 @@ void Session::OnRecv(int32 numOfBytes) {
 }
 
 uint32 Session::ProcessRead(BYTE *readBufferPtr, int32 len) {
-    int processLen = 0;
+    int32 processLen = 0;
 
     while (true) {
         int32 dataSize = len - processLen;
@@ -76,15 +76,15 @@ uint32 Session::ProcessRead(BYTE *readBufferPtr, int32 len) {
         if (dataSize < sizeof(PacketHeader))
             break;
 
-        PacketHeader header =
-            *(reinterpret_cast<PacketHeader *>(&readBufferPtr[processLen]));
+        PacketHeader *header =
+            reinterpret_cast<PacketHeader *>(&readBufferPtr[processLen]);
 
-        if (dataSize < header.size)
+        if (dataSize < header->size)
             break;
 
-        OnRead(&readBufferPtr[processLen], header.size);
+        OnRead(&readBufferPtr[processLen], header->size);
 
-        processLen += header.size;
+        processLen += header->size;
     }
 
     return processLen;
@@ -140,6 +140,7 @@ void Session::ProcessWrite() {
         [this, session = GetSessionptr()](boost_error_code ec, size_t len) {
             session->_sendingBuffers.clear();
             if (ec) {
+                cout << "error" << endl;
                 HandleError(ec);
                 return;
             }

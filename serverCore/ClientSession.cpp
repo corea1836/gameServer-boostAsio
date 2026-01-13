@@ -123,7 +123,6 @@ void ClientSession::OnRecv(const char *buffer, size_t length) {
             Protocol::S_Connected pkt;
             if (pkt.ParseFromArray(body, bodySize)) {
                 cout << "[Client " << _clientId << "] S_Connected 수신\n";
-                // this_thread::sleep_for(std::chrono::milliseconds(5000));
                 Protocol::C_Test packet;
                 packet.set_temp(54321);
                 auto sendBuffer =

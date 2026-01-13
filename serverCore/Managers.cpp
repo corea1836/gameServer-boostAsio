@@ -65,7 +65,6 @@ void Managers::InitGameManager() {
 GameLoop &Managers::GameManager() {
     auto &instance = Managers::Instance();
     if (!instance._ready || !instance._gameManager) {
-        cerr << "gameManager not found" << endl;
     }
 
     return *instance._gameManager;
