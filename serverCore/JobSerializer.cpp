@@ -43,6 +43,10 @@ void JobSerializer::Execute() {
 
         if (_jobCount.fetch_sub(jobCount) == jobCount) {
             _executing.store(false);
+
+            if (_jobCount.load() > 0) {
+                TryExecute();
+            }
             return;
         }
 
@@ -54,8 +58,7 @@ void JobSerializer::Execute() {
                  << "] Because of Timeout. Jobs Remain " << _jobs.Size()
                  << endl;
 
-            post(_gameIoContext,
-                 [this, self = shared_from_this()]() { TryExecute(); });
+            TryExecute();
             return;
         }
     }
