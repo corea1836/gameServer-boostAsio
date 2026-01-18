@@ -8,6 +8,8 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <thread>
+#include <unordered_map>
 
 using namespace std;
 
@@ -35,3 +37,4 @@ using boost_error_code = boost::system::error_code;
 
 USING_SHARED_PTR(Session);
 USING_SHARED_PTR(SendBuffer);
+USING_SHARED_PTR(Job);

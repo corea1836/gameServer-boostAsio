@@ -15,6 +15,7 @@ class Session : public enable_shared_from_this<Session> {
 
         void DisConnect();
         virtual void OnConnected();
+        virtual void OnDisConnected();
 
         void AsyncRecv();
         void OnRecv(int32 numOfBytes);
