@@ -18,7 +18,7 @@ class Lock {
         void ReadUnlock();
 
     private:
-        Atomic<uint32> _lockFlag = EMPTY_FLAG;
+        Atomic<uint32> _lockFlag{EMPTY_FLAG};
         uint16 _writeCount = 0;
 };
 

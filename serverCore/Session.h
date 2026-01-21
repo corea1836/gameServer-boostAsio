@@ -10,12 +10,11 @@ class Session : public enable_shared_from_this<Session> {
         };
 
     public:
-        Session(uint16 id);
+        Session(uint16 id, boost_io_context &io_context);
         virtual ~Session();
 
+        void Connect();
         void DisConnect();
-        virtual void OnConnected();
-        virtual void OnDisConnected();
 
         void AsyncRecv();
         void OnRecv(int32 numOfBytes);
@@ -35,16 +34,19 @@ class Session : public enable_shared_from_this<Session> {
         void HandleError(boost_error_code ec);
 
     private:
-        // Read
         uint32 ProcessRead(BYTE *readBufferPtr, int32 len);
-        void OnRead(BYTE *readBufferPtr, int32 len);
-        // Write
         void ProcessWrite();
+
+    protected:
+        virtual void OnConnected() {}
+        virtual uint32 OnRead(BYTE *readBufferPtr, int32 len) {}
+        virtual uint32 OnWrite(int32 len) {}
+        virtual void OnDisConnected() {}
 
     private:
         uint16 _id;
         boost_tcp::socket _socket;
-        Atomic<bool> _connected = false;
+        Atomic<bool> _connected{false};
 
     private:
         // Recv
@@ -54,5 +56,5 @@ class Session : public enable_shared_from_this<Session> {
         USE_LOCK;
         deque<SendBufferRef> _sendQueue;
         deque<SendBufferRef> _sendingBuffers;
-        Atomic<bool> _isSending = false;
+        Atomic<bool> _isSending{false};
 };

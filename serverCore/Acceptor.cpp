@@ -17,8 +17,7 @@ void Acceptor::AcceptAsync() {
                                if (!ec) {
                                    cout << "New Client Connected" << endl;
 
-                                   session->OnConnected();
-                                   session->AsyncRecv();
+                                   session->Connect();
                                } else {
                                    cerr << ec.what() << endl;
                                }

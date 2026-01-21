@@ -21,7 +21,7 @@ class JobSerializer : public enable_shared_from_this<JobSerializer> {
 
     protected:
         LockQueue<JobRef> _jobs;
-        Atomic<int32> _jobCount = 0;
+        Atomic<int32> _jobCount{0};
 
     private:
         void Push(JobRef &&job);
@@ -30,5 +30,5 @@ class JobSerializer : public enable_shared_from_this<JobSerializer> {
 
     private:
         boost_io_context &_gameIoContext;
-        Atomic<bool> _executing = false;
+        Atomic<bool> _executing{false};
 };

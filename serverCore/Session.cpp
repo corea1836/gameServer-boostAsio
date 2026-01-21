@@ -1,15 +1,19 @@
 #include "Session.h"
 #include "IoContext.h"
-#include "Managers.h"
-#include "PacketHandler.h"
-#include "SessionFactory.h"
+#include "PacketHeader.h"
+#include "SendBuffer.h"
 
-Session::Session(uint16 id)
+Session::Session(uint16 id, boost_io_context &io_context)
     : _id(id),
-      _socket(Managers::Instance().IoContextManager().GetNetworkIoContext()),
+      _socket(io_context),
       _recvBuffer(BUFFER_SIZE) {}
 
 Session::~Session() {}
+
+void Session::Connect() {
+    OnConnected();
+    AsyncRecv();
+}
 
 void Session::DisConnect() {
     if (!_connected.exchange(false))
@@ -26,10 +30,6 @@ void Session::DisConnect() {
     }
     OnDisConnected();
     cout << "Disconnect Success " << _id << endl;
-}
-
-void Session::OnDisConnected() {
-    Managers::SessionManager().RemoveSession(GetSessionptr());
 }
 
 void Session::AsyncRecv() {
@@ -88,11 +88,6 @@ uint32 Session::ProcessRead(BYTE *readBufferPtr, int32 len) {
     }
 
     return processLen;
-}
-
-void Session::OnRead(BYTE *readBufferPtr, int32 len) {
-    SessionRef session = GetSessionptr();
-    PacketHandler::HandlePacket(session, readBufferPtr, len);
 }
 
 void Session::Send(SendBufferRef sendBuffer) {
@@ -164,9 +159,4 @@ void Session::HandleError(boost_error_code ec) {
         DisConnect();
         break;
     }
-}
-
-void Session::OnConnected() {
-    cout << "Hello I am Session " << _id << "." << endl;
-    _connected.exchange(true);
 }
