@@ -2,8 +2,7 @@
 #include "CoreMacro.h"
 #include "CoreTLS.h"
 #include "TimeUtils.h"
-
-namespace this_thread = std::this_thread;
+#include <thread>
 
 void Lock::WriteLock()
 {
@@ -32,7 +31,7 @@ void Lock::WriteLock()
         if (TimeUtils::GetTickCount64() - beginTick >= ACQUIRE_TIMEOUT_TICK)
             CRASH("LOCK_TIMEOUT");
 
-        this_thread::yield();
+        std::this_thread::yield();
     }
 }
 
@@ -68,7 +67,7 @@ void Lock::ReadLock()
         if (TimeUtils::GetTickCount64() - beginTick >= ACQUIRE_TIMEOUT_TICK)
             CRASH("LOCK_TIMEOUT");
 
-        this_thread::yield();
+        std::this_thread::yield();
     }
 }
 

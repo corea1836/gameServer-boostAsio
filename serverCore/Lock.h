@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Types.h"
+#include <atomic>
 
 class Lock
 {
@@ -20,7 +21,7 @@ class Lock
         void ReadUnlock();
 
     private:
-        atomic<uint32> _lockFlag = EMPTY_FLAG;
+        std::atomic<uint32> _lockFlag = EMPTY_FLAG;
         uint16 _writeCount = 0;
 };
 
