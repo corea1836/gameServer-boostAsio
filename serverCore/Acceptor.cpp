@@ -32,7 +32,7 @@ void Acceptor::AcceptAsnyc()
                                    std::cout << "New Client Connected"
                                              << std::endl;
 
-                                   session->OnConnected();
+                                   session->Connect();
                                }
 
                                AcceptAsnyc();

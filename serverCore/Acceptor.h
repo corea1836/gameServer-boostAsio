@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Session.h"
+#include "BoostTypes.h"
 #include "Types.h"
 #include <atomic>
 #include <functional>

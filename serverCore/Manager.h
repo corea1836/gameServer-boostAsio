@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Acceptor.h"
 #include "SessionContainer.h"
 #include "Types.h"
 #include <atomic>
+#include <functional>
 #include <memory>
 
 #define GThreadPool Manager::Instance().GetThreadPool()
@@ -13,7 +15,8 @@
 class Manager
 {
     public:
-        void Init(uint16 port);
+        void Init(uint16 port,
+                  std::function<SessionRef(void)> sessionCreateFunc);
         void Start();
 
     private:

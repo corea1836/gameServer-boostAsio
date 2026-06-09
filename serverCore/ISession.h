@@ -3,6 +3,9 @@
 #include "Types.h"
 #include <memory>
 
+class SendBuffer;
+using SendBufferRef = std::shared_ptr<SendBuffer>;
+
 class ISession
 {
     public:
@@ -10,8 +13,8 @@ class ISession
         virtual bool Connect() = 0;
         virtual void Disconnect() = 0;
 
-        virtual void OnConnected() = 0;
-        virtual void OnDisconnected() = 0;
+        virtual void Recv() = 0;
+        virtual void Send(SendBufferRef SendBuffer) = 0;
 
         // getter
     public:

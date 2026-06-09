@@ -27,6 +27,5 @@ class IoContext
         // getter
     public:
         boost_io_context &GetNetworkIoContext() { return _networkIoContext; }
-
         boost_io_context &GetGameIoContext() { return _gameIoContext; }
 };

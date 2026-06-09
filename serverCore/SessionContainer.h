@@ -1,8 +1,9 @@
 #pragma once
 
 #include "CoreMacro.h"
-#include "Lock.h"
+#include "Types.h"
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 
 class ISession;
@@ -17,18 +18,18 @@ class SessionContainer
     public:
         template <typename T> std::shared_ptr<T> CreateSession()
         {
-            WRITE_LOCK;
+            std::lock_guard<std::mutex> guard(_lock);
 
             uint16 sessionId = ++_sessionId;
             std::shared_ptr<T> session = std::make_shared<T>(sessionId);
-            _sessions.insert({sessionId, session});
             return session;
         }
-        void RemoveSession(ISessionRef session);
+        void AddSession(ISessionRef session);
+        void RemoveSession(uint16 sessionId);
 
     private:
-        USE_LOCK;
+        std::mutex _lock;
 
-        uint16 _sessionId;
+        uint16 _sessionId = 0;
         std::unordered_map<uint16, ISessionRef> _sessions;
 };

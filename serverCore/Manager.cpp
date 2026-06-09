@@ -4,6 +4,7 @@
 #include "IoContext.h"
 #include "Session.h"
 #include "ThreadPool.h"
+#include <functional>
 #include <memory>
 
 Manager::Manager()
@@ -16,7 +17,8 @@ Manager::Manager()
 
 Manager::~Manager() {}
 
-void Manager::Init(uint16 port)
+void Manager::Init(uint16 port,
+                   std::function<SessionRef(void)> sessionCreateFunc)
 {
     if (port == 0)
     {
@@ -27,8 +29,7 @@ void Manager::Init(uint16 port)
     _ioContext = std::make_unique<IoContext>();
     _sessionContainer = std::make_unique<SessionContainer>();
     _acceptor = std::make_unique<Acceptor>(
-        port, _ioContext->GetNetworkIoContext(), [this]() -> SessionRef
-        { return _sessionContainer->CreateSession<Session>(); });
+        port, _ioContext->GetNetworkIoContext(), sessionCreateFunc);
 
     _ready.store(true);
 }
