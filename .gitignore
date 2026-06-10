@@ -54,6 +54,9 @@ _deps
 ### CMake Patch ###
 CMakeUserPresets.json
 
+### Build ###
+**/build/
+
 # External projects
 *-prefix/
 

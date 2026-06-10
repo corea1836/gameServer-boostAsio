@@ -93,21 +93,23 @@ void Session::OnRecv(int32 recvSize)
         return;
     }
 
+    int32 dataSize = _recvBuffer.GetDataSize();
+
     int32 readSize = Read(recvSize);
 
-    if (readSize < 0 || readSize > recvSize || !_recvBuffer.OnRead(readSize))
+    if (readSize < 0 || readSize > dataSize || !_recvBuffer.OnRead(readSize))
     {
         Disconnect();
         return;
     }
 
     _recvBuffer.Clean();
+
     Recv();
 }
 
 int32 Session::Read(int32 recvSize)
 {
-    std::cout << "read" << std::endl;
     int32 readSize = 0;
     while (true)
     {
@@ -190,7 +192,7 @@ void Session::Write()
             break;
 
         _inflightBuffer.push_back(
-            buffer(sendBuffer->GetBuffer(), sendBuffer->GetWriteSize()));
+            buffer(sendBuffer->GetData(), sendBuffer->GetWriteSize()));
         inflightSize += sendBuffer->GetWriteSize();
         inflightCount++;
     }

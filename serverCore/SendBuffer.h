@@ -21,5 +21,5 @@ class SendBuffer
     public:
         void Enclose(int32 writeSize) { _writeSize = writeSize; }
         int32 GetWriteSize() { return _writeSize; }
-        byte *GetBuffer() { return _buffer.data(); }
+        byte *GetData() { return _buffer.data(); }
 };
