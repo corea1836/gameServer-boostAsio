@@ -1,20 +1,20 @@
 #include "SessionContainer.h"
 #include "CoreMacro.h"
-#include "ISession.h"
+#include "Session.h"
 #include <mutex>
 
 SessionContainer::SessionContainer() {}
 
 SessionContainer::~SessionContainer() {}
 
-void SessionContainer::RemoveSession(uint16 sessionId)
+void SessionContainer::RemoveSession(int64 sessionId)
 {
     std::lock_guard<std::mutex> guard(_lock);
 
     ASSERT_CRASH(_sessions.erase(sessionId));
 }
 
-void SessionContainer::AddSession(ISessionRef session)
+void SessionContainer::AddSession(SessionRef session)
 {
     std::lock_guard<std::mutex> guard(_lock);
 

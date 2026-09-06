@@ -4,10 +4,7 @@
 #include "Types.h"
 #include <atomic>
 #include <functional>
-#include <memory>
 
-class Session;
-using SessionRef = std::shared_ptr<Session>;
 using SessionCreateFunc = std::function<SessionRef(void)>;
 
 class Acceptor
@@ -17,13 +14,11 @@ class Acceptor
                  SessionCreateFunc createFunc);
         ~Acceptor() = default;
 
-    public:
         void Start();
 
     private:
         void AcceptAsnyc();
 
-    private:
         boost_tcp::acceptor _acceptor;
         SessionCreateFunc _createFunc;
         std::atomic<bool> _ready = false;

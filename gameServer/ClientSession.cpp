@@ -1,7 +1,8 @@
 // ClientSession.cpp
 #include "ClientSession.h"
 #include "BoostTypes.h"
-#include "PacketHandler.h"
+#include "ClientPacketHandler.h"
+#include <SendBuffer.h>
 #include <__assertion_handler>
 #include <chrono>
 #include <mutex>
@@ -114,7 +115,7 @@ void ClientSession::DoWrite()
         });
 }
 
-void ClientSession::OnRecv(const char *buffer, size_t length)
+void ClientSession::OnRecv(char *buffer, size_t length)
 {
     int32_t processLen = 0;
     int32_t receiveCount = 0;
@@ -124,50 +125,25 @@ void ClientSession::OnRecv(const char *buffer, size_t length)
 
     while (true)
     {
-        int32_t dataSize = length - processLen;
+        int32_t dataSize = static_cast<int32_t>(length) - processLen;
 
-        if (dataSize < sizeof(PacketHeader))
+        if (dataSize < static_cast<int32_t>(sizeof(PacketHeader)))
             break;
 
-        const PacketHeader *header =
-            reinterpret_cast<const PacketHeader *>(buffer + processLen);
+        PacketHeader *header =
+            reinterpret_cast<PacketHeader *>(buffer + processLen);
 
         if (dataSize < header->size)
             break;
 
-        std::cout << "[Client " << _clientId << "] 패킷 #"
-                  << " - ID: " << header->id << ", 크기: " << header->size
-                  << "\n";
-
-        const char *body = buffer + processLen + sizeof(PacketHeader);
-        uint16_t bodySize = header->size - sizeof(PacketHeader);
-
-        // ✅ S_Connected 받았을 때만 54321 전송
-        if (header->id == PKT_S_CONNECTED)
-        {
-            Protocol::S_Connected pkt;
-            if (pkt.ParseFromArray(body, bodySize))
-            {
-                std::cout << "[Client " << _clientId << "] S_Connected 수신\n";
-                std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-                Protocol::C_Test packet;
-                packet.set_temp(54321);
-                auto sendBuffer =
-                    PacketHandler::MakeSendBuffer(packet, PKT_C_TEST);
-                Send(sendBuffer);
-            }
-        }
+        // 구조화된 디스패치 — ID 에 맞는 핸들러 자동 호출
+        ClientSessionRef self = shared_from_this();
+        ClientPacketHandler::HandlePacket(self, buffer + processLen,
+                                          header->size);
 
         processLen += header->size;
         receiveCount++;
     }
 
     std::cout << "수신 패킷 총 " << receiveCount << " 개 처리" << std::endl;
-
-    // ❌ 여기 있던 54321 전송 코드 삭제!
-    // auto _session = shared_from_this();
-    // Protocol::C_Test packet;
-    // packet.set_temp(54321);
-    // auto sendBuffer = PacketHandler::MakeSendBuffer(packet, PKT_C_TEST);
-    // _session->Send(sendBuffer);
 }

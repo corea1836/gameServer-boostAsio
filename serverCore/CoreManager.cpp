@@ -1,24 +1,12 @@
-#include "Manager.h"
+#include "CoreManager.h"
 #include "Acceptor.h"
 #include "CoreMacro.h"
 #include "IoContext.h"
-#include "Session.h"
+#include "SessionContainer.h"
 #include "ThreadPool.h"
-#include <functional>
-#include <memory>
 
-Manager::Manager()
-    : _threadPool(nullptr),
-      _ioContext(nullptr),
-      _sessionContainer(nullptr),
-      _acceptor(nullptr)
-{
-}
-
-Manager::~Manager() {}
-
-void Manager::Init(uint16 port,
-                   std::function<SessionRef(void)> sessionCreateFunc)
+void CoreManager::Init(uint16 port,
+                       std::function<SessionRef(void)> sessionCreateFunc)
 {
     if (port == 0)
     {
@@ -34,28 +22,38 @@ void Manager::Init(uint16 port,
     _ready.store(true);
 }
 
-void Manager::Start() { _acceptor->Start(); }
+void CoreManager::Start() { _acceptor->Start(); }
 
-ThreadPool &Manager::GetThreadPool()
+ThreadPool &CoreManager::GetThreadPool()
 {
     ASSERT_CRASH(_ready && _threadPool);
     return *_threadPool;
 }
 
-IoContext &Manager::GetIoContext()
+IoContext &CoreManager::GetIoContext()
 {
     ASSERT_CRASH(_ready && _ioContext);
     return *_ioContext;
 }
 
-SessionContainer &Manager::GetSessionContainer()
+SessionContainer &CoreManager::GetSessionContainer()
 {
     ASSERT_CRASH(_ready && _acceptor);
     return *_sessionContainer;
 }
 
-Acceptor &Manager::GetAcceptor()
+Acceptor &CoreManager::GetAcceptor()
 {
     ASSERT_CRASH(_ready && _acceptor);
     return *_acceptor;
 }
+
+CoreManager::CoreManager()
+    : _threadPool(nullptr),
+      _ioContext(nullptr),
+      _sessionContainer(nullptr),
+      _acceptor(nullptr)
+{
+}
+
+CoreManager::~CoreManager() {}

@@ -1,10 +1,8 @@
 #pragma once
 
+#include "GameTypes.h"
 #include <Session.h>
-#include <memory>
-
-class GameSession;
-using GameSessionRef = std::shared_ptr<GameSession>;
+#include <Types.h>
 
 class GameSession : public Session
 {
@@ -19,10 +17,21 @@ class GameSession : public Session
         void OnConnected() override;
         void OnDisconnected() override;
 
-        // getter
-    public:
-        GameSessionRef GetGameSessionRef()
+        void HandleLogin();
+
+        GameSessionRef GetGameSession()
         {
             return std::static_pointer_cast<GameSession>(shared_from_this());
         }
+
+        PlayerRef GetSelectedPlayer() { return _selectdPlayer; }
+        const std::vector<PlayerRef> &GetPlayers() const { return _players; }
+        void AddPlayer(const PlayerRef player);
+        void ChoosePlayer(int32 selectedPlayerIndex);
+
+    private:
+        PlayerRef _selectdPlayer;
+        std::vector<PlayerRef> _players;
+
+        int64 _dbId = 0;
 };

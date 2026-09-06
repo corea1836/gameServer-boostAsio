@@ -1,9 +1,10 @@
 #pragma once
 
 #include "BoostTypes.h"
-#include "ISession.h"
+#include <Session.h>
 #include <memory>
 #include <mutex>
+
 class ClientSession : public std::enable_shared_from_this<ClientSession>
 {
     public:
@@ -19,7 +20,7 @@ class ClientSession : public std::enable_shared_from_this<ClientSession>
     private:
         void DoRead();
         void DoWrite();
-        void OnRecv(const char *buffer, size_t length);
+        void OnRecv(char *buffer, size_t length);
 
         boost_tcp::socket _socket;
         int _clientId;
@@ -33,3 +34,5 @@ class ClientSession : public std::enable_shared_from_this<ClientSession>
         // Recv 관련
         std::array<char, 4096> _recvBuffer;
 };
+
+using ClientSessionRef = std::shared_ptr<ClientSession>;

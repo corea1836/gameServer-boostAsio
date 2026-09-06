@@ -47,32 +47,81 @@ PROTOBUF_NAMESPACE_OPEN
 PROTOBUF_NAMESPACE_CLOSE
 namespace Protocol {
 
-enum ECreatureState : int {
-  EATURE_STATE_IDLE = 0,
-  EATURE_STATE_MOVING = 1,
-  EATURE_STATE_SKILL = 2,
-  EATURE_STATE_DEAD = 3,
-  ECreatureState_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
-  ECreatureState_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+enum EActorState : int {
+  EACTOR_STATE_NONE = 0,
+  EACTOR_STATE_IDLE = 1,
+  EACTOR_STATE_MOVE = 2,
+  EActorState_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  EActorState_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
-bool ECreatureState_IsValid(int value);
-constexpr ECreatureState ECreatureState_MIN = EATURE_STATE_IDLE;
-constexpr ECreatureState ECreatureState_MAX = EATURE_STATE_DEAD;
-constexpr int ECreatureState_ARRAYSIZE = ECreatureState_MAX + 1;
+bool EActorState_IsValid(int value);
+constexpr EActorState EActorState_MIN = EACTOR_STATE_NONE;
+constexpr EActorState EActorState_MAX = EACTOR_STATE_MOVE;
+constexpr int EActorState_ARRAYSIZE = EActorState_MAX + 1;
 
-const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* ECreatureState_descriptor();
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* EActorState_descriptor();
 template<typename T>
-inline const std::string& ECreatureState_Name(T enum_t_value) {
-  static_assert(::std::is_same<T, ECreatureState>::value ||
+inline const std::string& EActorState_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, EActorState>::value ||
     ::std::is_integral<T>::value,
-    "Incorrect type passed to function ECreatureState_Name.");
+    "Incorrect type passed to function EActorState_Name.");
   return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
-    ECreatureState_descriptor(), enum_t_value);
+    EActorState_descriptor(), enum_t_value);
 }
-inline bool ECreatureState_Parse(
-    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ECreatureState* value) {
-  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<ECreatureState>(
-    ECreatureState_descriptor(), name, value);
+inline bool EActorState_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, EActorState* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<EActorState>(
+    EActorState_descriptor(), name, value);
+}
+enum EActorType : int {
+  EACTOR_TYPE_NONE = 0,
+  EACTOR_TYPE_PLAYER = 1,
+  EActorType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  EActorType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool EActorType_IsValid(int value);
+constexpr EActorType EActorType_MIN = EACTOR_TYPE_NONE;
+constexpr EActorType EActorType_MAX = EACTOR_TYPE_PLAYER;
+constexpr int EActorType_ARRAYSIZE = EActorType_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* EActorType_descriptor();
+template<typename T>
+inline const std::string& EActorType_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, EActorType>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function EActorType_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    EActorType_descriptor(), enum_t_value);
+}
+inline bool EActorType_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, EActorType* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<EActorType>(
+    EActorType_descriptor(), name, value);
+}
+enum EMoveState : int {
+  EMOVE_STATE_STOP = 0,
+  EMOVE_STATE_MOVE = 1,
+  EMoveState_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  EMoveState_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool EMoveState_IsValid(int value);
+constexpr EMoveState EMoveState_MIN = EMOVE_STATE_STOP;
+constexpr EMoveState EMoveState_MAX = EMOVE_STATE_MOVE;
+constexpr int EMoveState_ARRAYSIZE = EMoveState_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* EMoveState_descriptor();
+template<typename T>
+inline const std::string& EMoveState_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, EMoveState>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function EMoveState_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    EMoveState_descriptor(), enum_t_value);
+}
+inline bool EMoveState_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, EMoveState* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<EMoveState>(
+    EMoveState_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -96,10 +145,20 @@ inline bool ECreatureState_Parse(
 
 PROTOBUF_NAMESPACE_OPEN
 
-template <> struct is_proto_enum< ::Protocol::ECreatureState> : ::std::true_type {};
+template <> struct is_proto_enum< ::Protocol::EActorState> : ::std::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::Protocol::ECreatureState>() {
-  return ::Protocol::ECreatureState_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::Protocol::EActorState>() {
+  return ::Protocol::EActorState_descriptor();
+}
+template <> struct is_proto_enum< ::Protocol::EActorType> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::Protocol::EActorType>() {
+  return ::Protocol::EActorType_descriptor();
+}
+template <> struct is_proto_enum< ::Protocol::EMoveState> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::Protocol::EMoveState>() {
+  return ::Protocol::EMoveState_descriptor();
 }
 
 PROTOBUF_NAMESPACE_CLOSE

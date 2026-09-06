@@ -1,8 +1,15 @@
 #include "ThreadPool.h"
-
 #include "CoreTLS.h"
 #include "Types.h"
 #include <atomic>
+
+void ThreadPool::InitTLS()
+{
+    static std::atomic<uint32> SThreadId = 1;
+    LThreadId = SThreadId.fetch_add(1);
+}
+
+void ThreadPool::DestroyTLS() {}
 
 ThreadPool::ThreadPool() { InitTLS(); }
 
@@ -32,11 +39,3 @@ void ThreadPool::Join()
     }
     _threads.clear();
 }
-
-void ThreadPool::InitTLS()
-{
-    static std::atomic<uint32> SThreadId = 1;
-    LThreadId = SThreadId.fetch_add(1);
-}
-
-void ThreadPool::DestroyTLS() {}

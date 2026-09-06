@@ -11,16 +11,22 @@ set(PROTO_SOURCES
     ${PROTO_DIR}/Protocol.pb.cc
 )
 
-# 두 실행 파일이 공통으로 쓰는 파일
+# 두 실행 파일이 공통으로 쓰는 파일 (이제 Protobuf 파일들만 공통입니다)
 set(COMMON_SOURCES
-    PacketHandler.cpp
     ${PROTO_SOURCES}
 )
 
 # --- 서버 실행 파일 ---
 add_executable(GameServer
+    Character.cpp
     GameServer.cpp
     GameSession.cpp
+    PacketHandler.cpp
+    Actor.cpp
+    GameLoop.cpp
+    GameManager.cpp
+    Player.cpp
+    World.cpp
     ${COMMON_SOURCES}
 )
 
@@ -38,6 +44,7 @@ target_link_libraries(GameServer PRIVATE
 add_executable(DummyClient
     DummyClient.cpp
     ClientSession.cpp
+    ClientPacketHandler.cpp
     ${COMMON_SOURCES}
 )
 
@@ -50,4 +57,3 @@ target_link_libraries(DummyClient PRIVATE
     serverCore
     protobuf::libprotobuf
 )
-

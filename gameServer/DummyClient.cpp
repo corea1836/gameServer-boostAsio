@@ -1,7 +1,9 @@
 // DummyClient.cpp
 
+#include "ClientPacketHandler.h" // PacketHandler.h → ClientPacketHandler.h
 #include "ClientSession.h"
 #include "PacketHandler.h"
+#include "protobuf/Protocol.pb.h"
 #include <boost/asio.hpp>
 #include <iostream>
 #include <memory>
@@ -61,23 +63,18 @@ class DummyClient : public enable_shared_from_this<DummyClient>
                     {
                         cout << "[Client " << _id << "] 서버 연결 성공\n";
 
-                        // 세션 생성 및 시작
+                        // 세션 생성 및 수신 시작
                         _session =
                             make_shared<ClientSession>(std::move(_socket), _id);
                         _session->Start();
 
-                        cout << "=== [DummyClient " << _id
-                             << "] 123 패킷 전송 시작 ===" << endl;
+                        Protocol::C_EnterWorld pkt;
+                        _session->Send(PacketHandler::MakeSendBuffer(
+                            pkt, PKT_C_EnterWorld));
 
-                        // C_Test(123) 패킷 전송
-                        Protocol::C_Test cTestPkt;
-                        cTestPkt.set_temp(123);
-                        auto sendBuffer =
-                            PacketHandler::MakeSendBuffer(cTestPkt, PKT_C_TEST);
-                        _session->Send(sendBuffer);
-
-                        cout << "=== [DummyClient " << _id
-                             << "] 123 패킷 전송 완료 ===" << endl;
+                        // ❌ 직접 패킷 전송 안 함.
+                        //    서버가 S_Connected 를 먼저 보내고,
+                        //    Handle_S_Connected 가 C_EnterGame 을 전송함.
                     }
                     else
                     {
@@ -94,9 +91,10 @@ int main()
     {
         cout << "=== main() 시작 ===" << endl;
 
+        ClientPacketHandler::Init(); // ✅ 디스패치 테이블 초기화 (필수)
+
         boost::asio::io_context io_context;
 
-        // 클라이언트 생성
         auto client1 =
             make_shared<DummyClient>(io_context, "127.0.0.1", "7777", 1);
 

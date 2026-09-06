@@ -1,7 +1,7 @@
 #include "TimeUtils.h"
 #include <chrono>
 
-uint64_t TimeUtils::GetTickCount64()
+int64_t TimeUtils::GetTickCount64()
 {
     using namespace std::chrono;
 

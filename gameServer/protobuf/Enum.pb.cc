@@ -22,22 +22,24 @@ namespace _pbi = _pb::internal;
 
 namespace Protocol {
 }  // namespace Protocol
-static const ::_pb::EnumDescriptor* file_level_enum_descriptors_Enum_2eproto[1];
+static const ::_pb::EnumDescriptor* file_level_enum_descriptors_Enum_2eproto[3];
 static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_Enum_2eproto = nullptr;
 const uint32_t TableStruct_Enum_2eproto::offsets[1] = {};
 static constexpr ::_pbi::MigrationSchema* schemas = nullptr;
 static constexpr ::_pb::Message* const* file_default_instances = nullptr;
 
 const char descriptor_table_protodef_Enum_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\nEnum.proto\022\010Protocol*o\n\016ECreatureState"
-  "\022\025\n\021EATURE_STATE_IDLE\020\000\022\027\n\023EATURE_STATE_"
-  "MOVING\020\001\022\026\n\022EATURE_STATE_SKILL\020\002\022\025\n\021EATU"
-  "RE_STATE_DEAD\020\003B\033\252\002\030Google.Protobuf.Prot"
-  "ocolb\006proto3"
+  "\n\nEnum.proto\022\010Protocol*R\n\013EActorState\022\025\n"
+  "\021EACTOR_STATE_NONE\020\000\022\025\n\021EACTOR_STATE_IDL"
+  "E\020\001\022\025\n\021EACTOR_STATE_MOVE\020\002*:\n\nEActorType"
+  "\022\024\n\020EACTOR_TYPE_NONE\020\000\022\026\n\022EACTOR_TYPE_PL"
+  "AYER\020\001*8\n\nEMoveState\022\024\n\020EMOVE_STATE_STOP"
+  "\020\000\022\024\n\020EMOVE_STATE_MOVE\020\001B\033\252\002\030Google.Prot"
+  "obuf.Protocolb\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_Enum_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_Enum_2eproto = {
-    false, false, 172, descriptor_table_protodef_Enum_2eproto,
+    false, false, 261, descriptor_table_protodef_Enum_2eproto,
     "Enum.proto",
     &descriptor_table_Enum_2eproto_once, nullptr, 0, 0,
     schemas, file_default_instances, TableStruct_Enum_2eproto::offsets,
@@ -51,16 +53,43 @@ PROTOBUF_ATTRIBUTE_WEAK const ::_pbi::DescriptorTable* descriptor_table_Enum_2ep
 // Force running AddDescriptors() at dynamic initialization time.
 PROTOBUF_ATTRIBUTE_INIT_PRIORITY2 static ::_pbi::AddDescriptorsRunner dynamic_init_dummy_Enum_2eproto(&descriptor_table_Enum_2eproto);
 namespace Protocol {
-const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* ECreatureState_descriptor() {
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* EActorState_descriptor() {
   ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_Enum_2eproto);
   return file_level_enum_descriptors_Enum_2eproto[0];
 }
-bool ECreatureState_IsValid(int value) {
+bool EActorState_IsValid(int value) {
   switch (value) {
     case 0:
     case 1:
     case 2:
-    case 3:
+      return true;
+    default:
+      return false;
+  }
+}
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* EActorType_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_Enum_2eproto);
+  return file_level_enum_descriptors_Enum_2eproto[1];
+}
+bool EActorType_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+      return true;
+    default:
+      return false;
+  }
+}
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* EMoveState_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_Enum_2eproto);
+  return file_level_enum_descriptors_Enum_2eproto[2];
+}
+bool EMoveState_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
       return true;
     default:
       return false;

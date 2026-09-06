@@ -1,8 +1,6 @@
 #pragma once
 
 #include "BoostTypes.h"
-#include "CoreMacro.h"
-#include "ISession.h"
 #include "RecvBuffer.h"
 #include "Types.h"
 #include <atomic>
@@ -11,18 +9,7 @@
 #include <mutex>
 #include <vector>
 
-class Session;
-using SessionRef = std::shared_ptr<Session>;
-
-#pragma pack(push, 1)
-struct PacketHeader
-{
-        uint16 size;
-        uint16 id;
-};
-#pragma pack(pop)
-
-class Session : public ISession, public std::enable_shared_from_this<Session>
+class Session : public std::enable_shared_from_this<Session>
 {
         enum
         {
@@ -31,20 +18,19 @@ class Session : public ISession, public std::enable_shared_from_this<Session>
         };
 
     public:
-        Session(uint16 id);
+        Session(int64 id);
         virtual ~Session();
 
-    public:
-        virtual bool Connect() override;
-        virtual void Disconnect() override;
-        virtual void Recv() override;
-        virtual void Send(SendBufferRef InBuffer) override;
+        bool Connect();
+        void Disconnect();
         void HandleError(boost_error_code errorCode);
+        void Recv();
+        void Send(SendBufferRef InBuffer);
 
-    private:
-        void OnRecv(int32 recvSize);
-        int32 Read(int32 recvSize);
-        void Write();
+        bool IsConnected() { return _isConnected; }
+        int64 GetId() { return _id; }
+        boost_tcp::socket &GetSocket() { return _socket; }
+        SessionRef GetSession() { return shared_from_this(); }
 
     protected:
         virtual void OnRead(byte *readPos, int32 readSize) = 0;
@@ -52,11 +38,14 @@ class Session : public ISession, public std::enable_shared_from_this<Session>
         virtual void OnDisconnected() = 0;
 
     private:
-        uint16 _id = 0;
+        void OnRecv(int32 recvSize);
+        int32 Read(int32 recvSize);
+        void Write();
+
+        int64 _id = 0;
         boost_tcp::socket _socket;
         std::atomic<bool> _isConnected = false;
 
-    private:
         RecvBuffer _recvBuffer;
 
         std::mutex _lock;
@@ -65,12 +54,4 @@ class Session : public ISession, public std::enable_shared_from_this<Session>
         std::atomic<bool> _isWriting = false;
         std::deque<SendBufferRef> _writeQueue;
         std::vector<boost::asio::const_buffer> _inflightBuffer;
-
-        // getter
-    public:
-        virtual bool IsConnected() override { return _isConnected; }
-        virtual uint16 GetId() override { return _id; }
-        boost_tcp::socket &GetSocket() { return _socket; }
-
-        SessionRef GetSession() { return shared_from_this(); }
 };

@@ -1,24 +1,35 @@
 #pragma once
 
-#include "CoreMacro.h"
-#include "ISession.h"
-#include "SendBuffer.h"
-#include "Session.h"
-#include "Types.h"
+#include "GameTypes.h"
 #include "protobuf/Protocol.pb.h"
-#include <cstdint>
-#include <functional>
-#include <memory>
+#include <CoreMacro.h>
+#include <PacketHeader.h>
+#include <SendBuffer.h>
 
-using PacketHandlerFunc = std::function<bool(SessionRef &, byte *, int32)>;
+using PacketHandlerFunc = std::function<bool(GameSessionRef &, byte *, int32)>;
 extern PacketHandlerFunc GPacketHandler[UINT16_MAX];
 
-bool Handle_C_Test(SessionRef &session, Protocol::C_Test &pkt);
+bool Handle_C_FindMyPlayers(GameSessionRef &session,
+                            Protocol::C_FindMyPlayers &pkt);
+bool Handle_C_EnterWorld(GameSessionRef &session, Protocol::C_EnterWorld &pkt);
+bool Handle_C_LeaveWorld(GameSessionRef &session, Protocol::C_LeaveWorld &pkt);
+bool Handle_C_Move(GameSessionRef &session, Protocol::C_Move &pkt);
 
 enum : uint16
 {
-    PKT_C_TEST = 0,
-    PKT_S_CONNECTED = 1,
+    PKT_S_Connected = 1,
+    PKT_S_Disconnected = 2,
+    PKT_C_FindMyPlayers = 3,
+    PKT_S_FindMyPlayers = 4,
+    PKT_C_EnterWorld = 5,
+    PKT_S_EnterWorld = 6,
+    PKT_C_LeaveWorld = 7,
+    PKT_S_LeaveWorld = 8,
+    PKT_S_Spawn = 9,
+    PKT_S_Despawn = 10,
+    PKT_C_Move = 11,
+    PKT_S_Move = 12,
+
 };
 
 class PacketHandler
@@ -26,15 +37,37 @@ class PacketHandler
     public:
         static void Init()
         {
-            GPacketHandler[PKT_C_TEST] =
-                [](SessionRef &session, byte *buffer, int32 size)
+            GPacketHandler[PKT_C_FindMyPlayers] =
+                [](GameSessionRef &session, byte *buffer, int32 size)
             {
-                return HandlePacket<Protocol::C_Test>(Handle_C_Test, session,
+                return HandlePacket<Protocol::C_FindMyPlayers>(
+                    Handle_C_FindMyPlayers, session, buffer, size);
+            };
+
+            GPacketHandler[PKT_C_EnterWorld] =
+                [](GameSessionRef &session, byte *buffer, int32 size)
+            {
+                return HandlePacket<Protocol::C_EnterWorld>(
+                    Handle_C_EnterWorld, session, buffer, size);
+            };
+
+            GPacketHandler[PKT_C_LeaveWorld] =
+                [](GameSessionRef &session, byte *buffer, int32 size)
+            {
+                return HandlePacket<Protocol::C_LeaveWorld>(
+                    Handle_C_LeaveWorld, session, buffer, size);
+            };
+
+            GPacketHandler[PKT_C_Move] =
+                [](GameSessionRef &session, byte *buffer, int32 size)
+            {
+                return HandlePacket<Protocol::C_Move>(Handle_C_Move, session,
                                                       buffer, size);
             };
         }
 
-        static bool HandlePacket(SessionRef &session, byte *buffer, int32 size)
+        static bool HandlePacket(GameSessionRef &session, byte *buffer,
+                                 int32 size)
         {
             PacketHeader *header = reinterpret_cast<PacketHeader *>(buffer);
             return GPacketHandler[header->id](session, buffer, size);
@@ -57,13 +90,13 @@ class PacketHandler
             byte *bodyPtr = reinterpret_cast<byte *>(headerAfterByte);
             sendBuffer->Enclose(packetSize);
 
-            return sendBuffer;
             ASSERT_CRASH(pkt.SerializeToArray(bodyPtr, dataSize));
+            return sendBuffer;
         }
 
     private:
         template <typename PacketType, typename ProcessFunc>
-        static bool HandlePacket(ProcessFunc func, SessionRef &session,
+        static bool HandlePacket(ProcessFunc func, GameSessionRef &session,
                                  byte *buffer, int32 size)
         {
             PacketType pkt;

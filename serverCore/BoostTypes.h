@@ -1,4 +1,5 @@
 #pragma once
+
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/executor_work_guard.hpp>
 #include <boost/asio/io_context.hpp>
@@ -12,3 +13,4 @@ using boost_work_guard =
 using boost_tcp = boost::asio::ip::tcp;
 using boost_error_code = boost::system::error_code;
 using boost::asio::buffer;
+using boost_timer = boost::asio::steady_timer;

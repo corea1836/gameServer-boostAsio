@@ -1,19 +1,12 @@
 #include "Session.h"
-#include "BoostTypes.h"
-#include "CoreMacro.h"
-#include "ISession.h"
+#include "CoreManager.h"
 #include "IoContext.h"
-#include "Manager.h"
-#include "RecvBuffer.h"
+#include "PacketHeader.h"
 #include "SendBuffer.h"
-#include <cstddef>
 #include <iostream>
-#include <memory>
-#include <mutex>
 #include <ostream>
-#include <vector>
 
-Session::Session(uint16 id)
+Session::Session(int64 id)
     : _id(id),
       _socket(GIoContext.GetNetworkIoContext()),
       _recvBuffer(RecvBuffer(65535))
@@ -51,6 +44,8 @@ void Session::Disconnect()
 
     GSessionContainer.RemoveSession(GetId());
 
+    OnDisconnected();
+
     std::cout << "Disconnect Success " << _id << std::endl;
 }
 
@@ -83,6 +78,42 @@ void Session::Recv()
 
             session->OnRecv(recvSize);
         });
+}
+
+void Session::Send(SendBufferRef sendBuffer)
+{
+    bool canStartWrite = false;
+    bool isOverflow = false;
+
+    {
+        std::lock_guard<std::mutex> guard(_lock);
+        if (_sendQueueSize + sendBuffer->GetWriteSize() > MAX_SEND_QUEUE_SIZE)
+        {
+            isOverflow = true;
+        }
+
+        if (!isOverflow)
+        {
+            _sendQueueSize += sendBuffer->GetWriteSize();
+            _sendQueue.push_back(std::move(sendBuffer));
+
+            if (_isWriting.exchange(true) == false)
+            {
+                canStartWrite = true;
+            }
+        }
+    }
+
+    if (isOverflow)
+    {
+        Disconnect();
+        return;
+    }
+
+    if (canStartWrite)
+    {
+        Write();
+    }
 }
 
 void Session::OnRecv(int32 recvSize)
@@ -133,42 +164,6 @@ int32 Session::Read(int32 recvSize)
     return readSize;
 }
 
-void Session::Send(SendBufferRef sendBuffer)
-{
-    bool canStartWrite = false;
-    bool isOverflow = false;
-
-    {
-        std::lock_guard<std::mutex> guard(_lock);
-        if (_sendQueueSize + sendBuffer->GetWriteSize() > MAX_SEND_QUEUE_SIZE)
-        {
-            isOverflow = true;
-        }
-
-        if (!isOverflow)
-        {
-            _sendQueue.push_back(sendBuffer);
-            _sendQueueSize += sendBuffer->GetWriteSize();
-
-            if (_isWriting.exchange(true) == false)
-            {
-                canStartWrite = true;
-            }
-        }
-    }
-
-    if (isOverflow)
-    {
-        Disconnect();
-        return;
-    }
-
-    if (canStartWrite)
-    {
-        Write();
-    }
-}
-
 void Session::Write()
 {
 
@@ -186,9 +181,10 @@ void Session::Write()
 
     while (inflightCount < static_cast<int32>(_writeQueue.size()))
     {
-        SendBufferRef sendBuffer = _writeQueue[inflightCount];
+        const SendBufferRef &sendBuffer = _writeQueue[inflightCount];
 
-        if (sendBuffer->GetWriteSize() + inflightSize > MAX_INFLIGHT_SIZE)
+        if (inflightCount > 0 &&
+            sendBuffer->GetWriteSize() + inflightSize > MAX_INFLIGHT_SIZE)
             break;
 
         _inflightBuffer.push_back(

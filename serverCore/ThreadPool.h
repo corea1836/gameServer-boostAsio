@@ -7,15 +7,14 @@
 class ThreadPool
 {
     public:
+        static void InitTLS();
+        static void DestroyTLS();
+
         ThreadPool();
         ~ThreadPool();
 
-    public:
         void Launch(std::function<void(void)> callback);
         void Join();
-
-        static void InitTLS();
-        static void DestroyTLS();
 
     private:
         std::mutex _lock;

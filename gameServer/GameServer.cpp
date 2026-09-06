@@ -1,16 +1,21 @@
-
+#include "CoreManager.h"
+#include "GameLoop.h"
+#include "GameManager.h"
 #include "GameSession.h"
 #include "IoContext.h"
-#include "Manager.h"
 #include "PacketHandler.h"
 #include "ThreadPool.h"
+
 int main()
 {
     PacketHandler::Init();
-    Manager::Instance().Init(
+    CoreManager::Instance().Init(
         7777, []() -> SessionRef
         { return GSessionContainer.CreateSession<GameSession>(); });
-    Manager::Instance().Start();
+    CoreManager::Instance().Start();
+    GameManager::Instance();
+
+    GGameLoop.CreateWorld();
 
     for (int i = 0; i < 5; i++)
     {

@@ -5,5 +5,5 @@
 class TimeUtils
 {
     public:
-        static uint64_t GetTickCount64();
+        static int64_t GetTickCount64();
 };

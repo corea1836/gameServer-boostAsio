@@ -8,13 +8,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(SERVERCORE_SOURCES
     Acceptor.cpp
     CoreTLS.cpp
+    CoreManager.cpp
     IoContext.cpp
+    JobSerializer.cpp
     RecvBuffer.cpp
     Session.cpp
     SessionContainer.cpp
     ThreadPool.cpp
     TimeUtils.cpp
-    Manager.cpp
 )
 
 set(SERVERCORE_HEADERS
@@ -22,9 +23,10 @@ set(SERVERCORE_HEADERS
     BoostTypes.h
     CoreMacro.h
     CoreTLS.h
+    CoreManager.h
     IoContext.h
-    ISession.h
-    Manager.h
+    Job.h
+    JobSerializer.h
     RecvBuffer.h
     SendBuffer.h
     Session.h

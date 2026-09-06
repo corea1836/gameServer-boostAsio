@@ -1,13 +1,8 @@
 #pragma once
 
-#include "CoreMacro.h"
 #include "Types.h"
-#include <memory>
 #include <mutex>
 #include <unordered_map>
-
-class ISession;
-using ISessionRef = std::shared_ptr<ISession>;
 
 class SessionContainer
 {
@@ -15,7 +10,6 @@ class SessionContainer
         SessionContainer();
         ~SessionContainer();
 
-    public:
         template <typename T> std::shared_ptr<T> CreateSession()
         {
             std::lock_guard<std::mutex> guard(_lock);
@@ -24,12 +18,21 @@ class SessionContainer
             std::shared_ptr<T> session = std::make_shared<T>(sessionId);
             return session;
         }
-        void AddSession(ISessionRef session);
-        void RemoveSession(uint16 sessionId);
+
+        SessionRef FindSession(int64 sessionId)
+        {
+            std::lock_guard<std::mutex> guard(_lock);
+
+            auto session = _sessions.find(sessionId);
+            return session != _sessions.end() ? session->second : nullptr;
+        }
+
+        void AddSession(SessionRef session);
+        void RemoveSession(int64 sessionId);
 
     private:
         std::mutex _lock;
 
-        uint16 _sessionId = 0;
-        std::unordered_map<uint16, ISessionRef> _sessions;
+        int64 _sessionId = 0;
+        std::unordered_map<int64, SessionRef> _sessions;
 };
