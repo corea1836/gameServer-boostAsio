@@ -61,3 +61,7 @@ CMakeUserPresets.json
 *-prefix/
 
 # End of https://www.toptal.com/developers/gitignore/api/c++,cmake
+
+### OS / IDE ###
+.DS_Store
+.idea/
