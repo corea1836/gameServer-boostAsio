@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && cmake -S . -B build >/dev/null && cmake --build build -j8 2>&1 && ctest --test-dir build --output-on-failure 2>&1",
+            "timeout": 600
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // empty' | grep -qE 'rm[[:space:]]+-rf|git[[:space:]]+push[[:space:]]+--force|git[[:space:]]+reset[[:space:]]+--hard|DROP[[:space:]]+TABLE' && { echo 'BLOCKED: 위험한 명령어가 감지되었습니다.' >&2; exit 2; } || exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}
