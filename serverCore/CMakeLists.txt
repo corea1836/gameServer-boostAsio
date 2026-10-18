@@ -11,6 +11,7 @@ set(SERVERCORE_SOURCES
     CoreManager.cpp
     IoContext.cpp
     JobSerializer.cpp
+    PacketFraming.cpp
     RecvBuffer.cpp
     Session.cpp
     SessionContainer.cpp
@@ -27,6 +28,7 @@ set(SERVERCORE_HEADERS
     IoContext.h
     Job.h
     JobSerializer.h
+    PacketFraming.h
     RecvBuffer.h
     SendBuffer.h
     Session.h

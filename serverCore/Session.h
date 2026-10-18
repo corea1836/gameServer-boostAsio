@@ -39,7 +39,6 @@ class Session : public std::enable_shared_from_this<Session>
 
     private:
         void OnRecv(int32 recvSize);
-        int32 Read(int32 recvSize);
         void Write();
 
         int64 _id = 0;

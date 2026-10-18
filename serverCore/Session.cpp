@@ -1,7 +1,7 @@
 #include "Session.h"
 #include "CoreManager.h"
 #include "IoContext.h"
-#include "PacketHeader.h"
+#include "PacketFraming.h"
 #include "SendBuffer.h"
 #include <iostream>
 #include <ostream>
@@ -124,44 +124,14 @@ void Session::OnRecv(int32 recvSize)
         return;
     }
 
-    int32 dataSize = _recvBuffer.GetDataSize();
-
-    int32 readSize = Read(recvSize);
-
-    if (readSize < 0 || readSize > dataSize || !_recvBuffer.OnRead(readSize))
+    if (!ParsePackets(_recvBuffer, [this](byte *p, int32 n) { OnRead(p, n); }))
     {
         Disconnect();
         return;
     }
-
     _recvBuffer.Clean();
 
     Recv();
-}
-
-int32 Session::Read(int32 recvSize)
-{
-    int32 readSize = 0;
-    while (true)
-    {
-        int32 remainSize = recvSize - readSize;
-
-        if (remainSize <= 0 ||
-            remainSize < static_cast<int32>(sizeof(PacketHeader)))
-            break;
-
-        PacketHeader *header = reinterpret_cast<PacketHeader *>(
-            _recvBuffer.GetReadPos() + readSize);
-
-        if (remainSize < header->size)
-            break;
-
-        OnRead(_recvBuffer.GetReadPos() + readSize, header->size);
-
-        readSize += header->size;
-    }
-
-    return readSize;
 }
 
 void Session::Write()

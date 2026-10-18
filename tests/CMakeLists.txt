@@ -8,6 +8,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(T1Tests
     SmokeTest.cpp
+    PacketFramingTest.cpp
 )
 
 target_link_libraries(T1Tests PRIVATE
@@ -16,4 +17,5 @@ target_link_libraries(T1Tests PRIVATE
 )
 
 include(GoogleTest)
-gtest_discover_tests(T1Tests)
+# 무한 루프 버그가 멈춤이 아니라 실패로 보이게 한다 (ctest 기본값은 1500초)
+gtest_discover_tests(T1Tests PROPERTIES TIMEOUT 10)

@@ -83,7 +83,7 @@ float 좌표 기반 액션 MMORPG 서버를 C++17 + Boost.Asio로 직접 만들�
 | # | 담당 | 상태 | 작업 | 검증 |
 |---|---|---|---|---|
 | 1-1 | Claude | 완료 | GoogleTest(FetchContent)와 `tests/` 타깃 추가, CMake 옵션 `T1_SANITIZE=thread` 추가 | `ctest`로 smoke 테스트 통과, TSan 빌드로 GameServer 실행 |
-| 1-2 | Claude 테스트 → 사용자 | | **recv 프레이밍.** `Session::Read(recvSize)`가 남아 있던 데이터를 빼고 새로 받은 바이트만 기준으로 파싱한다. `header->size < 4`이면 무한 루프에 빠진다(`serverCore/Session.cpp:127-162`). 파싱 부분을 순수 함수로 분리한다 | 쪼개진 패킷, 한 번에 여러 패킷, size<4 에러, size 초과 에러 — 테스트 4개 통과 |
+| 1-2 | Claude 테스트 → 사용자 | 완료 | **recv 프레이밍.** `Session::Read(recvSize)`가 남아 있던 데이터를 빼고 새로 받은 바이트만 기준으로 파싱한다. `header->size < 4`이면 무한 루프에 빠진다(`serverCore/Session.cpp:142-164`). 파싱 부분을 `ParsePackets(RecvBuffer&, onPacket)`(`serverCore/PacketFraming.h`)로 분리한다. 받는 쪽이 크기를 고르지 않도록 `RecvBuffer`를 통째로 받는다. 최대 패킷 크기 상한은 두지 않는다(`uint16`이라 버퍼가 넘치지 않고, `Session`을 봇과 같이 써서 상한을 두면 세션별 설정이 필요하다) | `tests/PacketFramingTest.cpp`의 쪼개진 패킷, 한 번에 여러 패킷, size<4 에러, 헤더 쪼개짐 — 테스트 4개 통과 |
 | 1-3 | Claude 테스트 → 사용자 | | **핸들러 방어.** 미등록 id가 오면 `bad_function_call`이 난다. 배열 크기가 `UINT16_MAX`라 마지막 id에서 범위를 벗어난다(`gameServer/PacketHandler.h:10,69-74`). `OnRead`가 반환값을 무시한다(`GameSession.cpp:11`) | 미등록 id면 false를 반환하고 연결을 끊는다 |
 | 1-4 | 사용자 | | **세션 close 경쟁**(ADR-008, 시작할 때 방법 결정)(`Session.cpp:27-50,107-116`) | 접속/종료를 반복하는 봇에서 TSan 경고 0건 |
 | 1-5 | 사용자 | | **게임 상태 데이터 레이스.** `Actor::_world`를 네트워크 스레드에서 읽는다(`PacketHandler.cpp:80,104`). `GameSession`의 `_selectdPlayer`/`_players`를 여러 스레드에서 쓴다. `OnDisconnected`에서 world가 null일 수 있다(`GameSession.cpp:20-21`). EnterWorld를 다시 보내면 이전 플레이어가 유령으로 남는다. 세션 weak_ptr이 만료됐는지 확인하지 않는다(`World.cpp:93,164,206`). World 람다가 `this`를 raw 포인터로 캡처한다 | 입장 → 이동 → 종료 봇 시나리오에서 TSan 경고 0건 |
