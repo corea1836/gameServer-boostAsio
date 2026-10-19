@@ -7,6 +7,7 @@
 #include <chrono>
 #include <memory>
 #include <mutex>
+#include <queue>
 #include <deque>
 
 class JobSerializer : public std::enable_shared_from_this<JobSerializer>
@@ -58,30 +59,9 @@ class JobSerializer : public std::enable_shared_from_this<JobSerializer>
                 });
         }
 
-        template <typename ClassType, typename ReturnType, typename... Args>
-        void PostAfter(int64 tickAfter, std::shared_ptr<ClassType> owner,
-                       ReturnType (ClassType::*memFunc)(Args...), Args... args)
-        {
-            auto timer = std::make_shared<boost_timer>(_gameIoContext);
-            timer->expires_after(std::chrono::milliseconds(tickAfter));
-
-            timer->async_wait(
-                [weakSelf = weak_from_this(), timer, owner, memFunc,
-                 args...](boost_error_code errorCode) mutable
-                {
-                    if (errorCode)
-                        return;
-
-                    auto self = weakSelf.lock();
-                    if (self == nullptr)
-                        return;
-
-                    self->Post(std::make_shared<Job>(owner, memFunc, args...));
-                });
-        }
-
         bool GetIsClosed() { return _isClosed.load(); }
         void Close() { _isClosed.store(true); }
+        boost_io_context &GetGameIoContext() { return _gameIoContext; }
 
     private:
         void AddJob(JobRef job);

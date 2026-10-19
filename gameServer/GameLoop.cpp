@@ -27,6 +27,8 @@ void GameLoop::CreateWorld()
             if (_worlds.find(id) != _worlds.end())
                 return;
             std::shared_ptr<World> newWorld = std::make_shared<World>();
+
+            newWorld->Init();
             _worlds.emplace(id, newWorld);
         });
 }

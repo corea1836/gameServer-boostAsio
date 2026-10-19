@@ -1,6 +1,7 @@
 #include "World.h"
 #include "Actor.h"
 #include "CoreManager.h"
+#include "FixedTicker.h"
 #include "GameSession.h"
 #include "GameTypes.h"
 #include "IoContext.h"
@@ -12,39 +13,35 @@
 #include <JobSerializer.h>
 #include <algorithm>
 
-World::World() { _jobs = std::make_unique<JobSerializer>(GIoContext.GetGameIoContext()); }
+World::World() {
+}
 
 World::~World() {}
 
-void World::Post(CallbackFunc &&callback) { _jobs->Post(std::move(callback)); }
-
-void World::PostAfter(int64 tickAfter, CallbackFunc &&callback)
+void World::Init()
 {
-    _jobs->PostAfter(tickAfter, std::move(callback));
+    _jobs = std::make_shared<JobSerializer>(GIoContext.GetGameIoContext());
+    _fixedTicker = std::make_shared<FixedTicker>(_jobs, TICK_INTERVAL_MS, [this, weakSelf = weak_from_this()]()
+    {
+        auto self = weakSelf.lock();
+        if (self == nullptr)
+            return;
+
+        Tick();
+    });
+
+    _fixedTicker->Start();
 }
+
+void World::Post(CallbackFunc &&callback) { _jobs->Post(std::move(callback)); }
 
 void World::Tick()
 {
-    if (GetIsClosed() || _players.empty())
-    {
-        _isTickRunning = false;
-        return;
-    }
+    auto now = TimeUtils::GetTickCount64();
 
-    int64 now = TimeUtils::GetTickCount64();
-    float deltaTime = (now - _lastTickTime) / 1000.f;
-    _lastTickTime = now;
+    UpdatePosition(TICK_INTERVAL_MS / 1000.f);
 
-    UpdatePosition(deltaTime);
-
-    MulticastMove();
-
-    PostAfter(TICK_INTERVAL_MS, [this]() { Tick(); });
-}
-
-void World::StartTick()
-{
-    PostAfter(TICK_INTERVAL_MS, [this]() { Tick(); });
+    MulticastMove(now);
 }
 
 void World::UpdatePosition(float deltaTime)
@@ -65,7 +62,7 @@ void World::UpdatePosition(float deltaTime)
     }
 }
 
-void World::MulticastMove()
+void World::MulticastMove(int64 now)
 {
     for (auto &[id, player] : _players)
     {
@@ -87,7 +84,7 @@ void World::MulticastMove()
         data.set_current_position_y(currentPos.y);
         data.set_move_state(playerMove.move_state);
         *pkt.mutable_move_data() = data;
-        pkt.set_server_time(_lastTickTime);
+        pkt.set_server_time(now);
 
         SendBufferRef buffer = PacketHandler::MakeSendBuffer(pkt, PKT_S_Move);
         for (auto [k, other] : _players)
@@ -143,12 +140,6 @@ void World::EnterPlayer(PlayerRef player)
     }
 
     _players.emplace(player->GetActorInfo().actorId, player);
-
-    if (!_isTickRunning)
-    {
-        _isTickRunning = true;
-        StartTick();
-    }
 
     {
         Protocol::S_Spawn pkt;

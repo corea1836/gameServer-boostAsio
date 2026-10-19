@@ -9,6 +9,7 @@ set(SERVERCORE_SOURCES
     Acceptor.cpp
     CoreTLS.cpp
     CoreManager.cpp
+    FixedTicker.cpp
     IoContext.cpp
     JobSerializer.cpp
     PacketFraming.cpp
@@ -25,6 +26,7 @@ set(SERVERCORE_HEADERS
     CoreMacro.h
     CoreTLS.h
     CoreManager.h
+    FixedTicker.h
     IoContext.h
     Job.h
     JobSerializer.h
