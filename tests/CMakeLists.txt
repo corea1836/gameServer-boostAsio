@@ -9,6 +9,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(T1Tests
     SmokeTest.cpp
     PacketFramingTest.cpp
+    JobSerializerTest.cpp
 )
 
 target_link_libraries(T1Tests PRIVATE

@@ -1,11 +1,9 @@
 #include "JobSerializer.h"
-#include "CoreManager.h"
-#include "IoContext.h"
 #include "TimeUtils.h"
 #include <iostream>
 
-JobSerializer::JobSerializer()
-    : _gameIoContext(GIoContext.GetGameIoContext())
+JobSerializer::JobSerializer(boost_io_context& gameIoContext)
+    : _gameIoContext(gameIoContext)
 {
 }
 
@@ -35,12 +33,10 @@ void JobSerializer::Execute()
 
     while (true)
     {
-        std::vector<JobRef> executeJobs;
-
         {
             std::lock_guard<std::mutex> lockGuard(_lock);
 
-            if (_jobs.empty())
+            if (_jobs.empty() && _executeJobs.empty())
             {
                 _isExecuting.store(false);
                 return;
@@ -49,20 +45,23 @@ void JobSerializer::Execute()
             int jobCount = 0;
             while (!_jobs.empty() && jobCount < DRAIN_COUNT)
             {
-                executeJobs.push_back(std::move(_jobs.front()));
+                _executeJobs.push_back(std::move(_jobs.front()));
                 _jobs.pop();
                 jobCount++;
             }
         }
 
-        for (const JobRef &job : executeJobs)
-            job->Execute();
-
-        if (TimeUtils::GetTickCount64() > endTickCount)
+        while (!_executeJobs.empty())
         {
-            post(_gameIoContext,
-                 [self = shared_from_this()]() { self->Execute(); });
-            return;
+            if (TimeUtils::GetTickCount64() > endTickCount)
+            {
+                post(_gameIoContext, [self = shared_from_this()] { self->Execute(); });
+                return;
+            }
+            const JobRef job = std::move(_executeJobs.front());
+            _executeJobs.pop_front();
+
+            job->Execute();
         }
     }
 }

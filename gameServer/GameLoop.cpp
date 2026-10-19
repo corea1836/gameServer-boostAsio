@@ -1,10 +1,12 @@
 #include "GameLoop.h"
+#include "CoreManager.h"
+#include "IoContext.h"
 #include "Player.h"
 #include "World.h"
 #include <JobSerializer.h>
 #include <memory>
 
-GameLoop::GameLoop() { _jobs = std::make_shared<JobSerializer>(); }
+GameLoop::GameLoop() { _jobs = std::make_shared<JobSerializer>(GIoContext.GetGameIoContext()); }
 
 void GameLoop::Post(CallbackFunc &&callback)
 {

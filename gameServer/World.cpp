@@ -1,10 +1,12 @@
 #include "World.h"
+#include "CoreManager.h"
 #include "GameSession.h"
+#include "IoContext.h"
 #include "PacketHandler.h"
 #include "Player.h"
 #include <JobSerializer.h>
 
-World::World() { _jobs = std::make_unique<JobSerializer>(); }
+World::World() { _jobs = std::make_unique<JobSerializer>(GIoContext.GetGameIoContext()); }
 
 World::~World() {}
 

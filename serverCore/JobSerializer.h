@@ -7,18 +7,18 @@
 #include <chrono>
 #include <memory>
 #include <mutex>
-#include <queue>
+#include <deque>
 
 class JobSerializer : public std::enable_shared_from_this<JobSerializer>
 {
+    public:
         enum
         {
             DRAIN_COUNT = 100,
             EXECUTE_MAX_DURATION_MS = 64,
         };
 
-    public:
-        JobSerializer();
+        JobSerializer(boost_io_context &gameIoContext);
         ~JobSerializer() = default;
 
         void Post(CallbackFunc &&callback)
@@ -88,6 +88,7 @@ class JobSerializer : public std::enable_shared_from_this<JobSerializer>
         void Execute();
 
         std::queue<JobRef> _jobs;
+        std::deque<JobRef> _executeJobs;
         boost_io_context &_gameIoContext;
         std::mutex _lock;
         std::atomic<bool> _isExecuting = false;
