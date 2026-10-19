@@ -18,7 +18,7 @@ void GameSession::OnDisconnected()
     if (_selectdPlayer != nullptr)
     {
         WorldRef world = _selectdPlayer->GetWorld();
-        world->LeavePlayer(_selectdPlayer->GetActorData().actorId);
+        world->LeavePlayer(_selectdPlayer->GetActorInfo().actorId);
         _selectdPlayer = nullptr;
     }
 

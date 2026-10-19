@@ -365,8 +365,8 @@ class MoveData final :
     kDirectionYFieldNumber = 2,
     kDirectionZFieldNumber = 3,
     kYawFieldNumber = 4,
-    kPositionXFieldNumber = 5,
-    kPositionYFieldNumber = 6,
+    kCurrentPositionXFieldNumber = 5,
+    kCurrentPositionYFieldNumber = 6,
     kMoveStateFieldNumber = 7,
   };
   // float direction_x = 1;
@@ -405,22 +405,22 @@ class MoveData final :
   void _internal_set_yaw(float value);
   public:
 
-  // float position_x = 5;
-  void clear_position_x();
-  float position_x() const;
-  void set_position_x(float value);
+  // float current_position_x = 5;
+  void clear_current_position_x();
+  float current_position_x() const;
+  void set_current_position_x(float value);
   private:
-  float _internal_position_x() const;
-  void _internal_set_position_x(float value);
+  float _internal_current_position_x() const;
+  void _internal_set_current_position_x(float value);
   public:
 
-  // float position_y = 6;
-  void clear_position_y();
-  float position_y() const;
-  void set_position_y(float value);
+  // float current_position_y = 6;
+  void clear_current_position_y();
+  float current_position_y() const;
+  void set_current_position_y(float value);
   private:
-  float _internal_position_y() const;
-  void _internal_set_position_y(float value);
+  float _internal_current_position_y() const;
+  void _internal_set_current_position_y(float value);
   public:
 
   // .Protocol.EMoveState move_state = 7;
@@ -444,8 +444,8 @@ class MoveData final :
     float direction_y_;
     float direction_z_;
     float yaw_;
-    float position_x_;
-    float position_y_;
+    float current_position_x_;
+    float current_position_y_;
     int move_state_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -756,12 +756,13 @@ class ActorData final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kPositionDataFieldNumber = 2,
-    kMoveDataFieldNumber = 3,
+    kPositionDataFieldNumber = 4,
+    kMoveDataFieldNumber = 5,
     kActorIdFieldNumber = 1,
-    kActorTypeFieldNumber = 4,
+    kActorTypeFieldNumber = 2,
+    kActorStateFieldNumber = 3,
   };
-  // .Protocol.PositionData position_data = 2;
+  // .Protocol.PositionData position_data = 4;
   bool has_position_data() const;
   private:
   bool _internal_has_position_data() const;
@@ -779,7 +780,7 @@ class ActorData final :
       ::Protocol::PositionData* position_data);
   ::Protocol::PositionData* unsafe_arena_release_position_data();
 
-  // .Protocol.MoveData move_data = 3;
+  // .Protocol.MoveData move_data = 5;
   bool has_move_data() const;
   private:
   bool _internal_has_move_data() const;
@@ -806,13 +807,22 @@ class ActorData final :
   void _internal_set_actor_id(int64_t value);
   public:
 
-  // .Protocol.EActorType actor_type = 4;
+  // .Protocol.EActorType actor_type = 2;
   void clear_actor_type();
   ::Protocol::EActorType actor_type() const;
   void set_actor_type(::Protocol::EActorType value);
   private:
   ::Protocol::EActorType _internal_actor_type() const;
   void _internal_set_actor_type(::Protocol::EActorType value);
+  public:
+
+  // .Protocol.EActorState actor_state = 3;
+  void clear_actor_state();
+  ::Protocol::EActorState actor_state() const;
+  void set_actor_state(::Protocol::EActorState value);
+  private:
+  ::Protocol::EActorState _internal_actor_state() const;
+  void _internal_set_actor_state(::Protocol::EActorState value);
   public:
 
   // @@protoc_insertion_point(class_scope:Protocol.ActorData)
@@ -827,6 +837,7 @@ class ActorData final :
     ::Protocol::MoveData* move_data_;
     int64_t actor_id_;
     int actor_type_;
+    int actor_state_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1465,44 +1476,44 @@ inline void MoveData::set_yaw(float value) {
   // @@protoc_insertion_point(field_set:Protocol.MoveData.yaw)
 }
 
-// float position_x = 5;
-inline void MoveData::clear_position_x() {
-  _impl_.position_x_ = 0;
+// float current_position_x = 5;
+inline void MoveData::clear_current_position_x() {
+  _impl_.current_position_x_ = 0;
 }
-inline float MoveData::_internal_position_x() const {
-  return _impl_.position_x_;
+inline float MoveData::_internal_current_position_x() const {
+  return _impl_.current_position_x_;
 }
-inline float MoveData::position_x() const {
-  // @@protoc_insertion_point(field_get:Protocol.MoveData.position_x)
-  return _internal_position_x();
+inline float MoveData::current_position_x() const {
+  // @@protoc_insertion_point(field_get:Protocol.MoveData.current_position_x)
+  return _internal_current_position_x();
 }
-inline void MoveData::_internal_set_position_x(float value) {
+inline void MoveData::_internal_set_current_position_x(float value) {
   
-  _impl_.position_x_ = value;
+  _impl_.current_position_x_ = value;
 }
-inline void MoveData::set_position_x(float value) {
-  _internal_set_position_x(value);
-  // @@protoc_insertion_point(field_set:Protocol.MoveData.position_x)
+inline void MoveData::set_current_position_x(float value) {
+  _internal_set_current_position_x(value);
+  // @@protoc_insertion_point(field_set:Protocol.MoveData.current_position_x)
 }
 
-// float position_y = 6;
-inline void MoveData::clear_position_y() {
-  _impl_.position_y_ = 0;
+// float current_position_y = 6;
+inline void MoveData::clear_current_position_y() {
+  _impl_.current_position_y_ = 0;
 }
-inline float MoveData::_internal_position_y() const {
-  return _impl_.position_y_;
+inline float MoveData::_internal_current_position_y() const {
+  return _impl_.current_position_y_;
 }
-inline float MoveData::position_y() const {
-  // @@protoc_insertion_point(field_get:Protocol.MoveData.position_y)
-  return _internal_position_y();
+inline float MoveData::current_position_y() const {
+  // @@protoc_insertion_point(field_get:Protocol.MoveData.current_position_y)
+  return _internal_current_position_y();
 }
-inline void MoveData::_internal_set_position_y(float value) {
+inline void MoveData::_internal_set_current_position_y(float value) {
   
-  _impl_.position_y_ = value;
+  _impl_.current_position_y_ = value;
 }
-inline void MoveData::set_position_y(float value) {
-  _internal_set_position_y(value);
-  // @@protoc_insertion_point(field_set:Protocol.MoveData.position_y)
+inline void MoveData::set_current_position_y(float value) {
+  _internal_set_current_position_y(value);
+  // @@protoc_insertion_point(field_set:Protocol.MoveData.current_position_y)
 }
 
 // .Protocol.EMoveState move_state = 7;
@@ -1633,7 +1644,47 @@ inline void ActorData::set_actor_id(int64_t value) {
   // @@protoc_insertion_point(field_set:Protocol.ActorData.actor_id)
 }
 
-// .Protocol.PositionData position_data = 2;
+// .Protocol.EActorType actor_type = 2;
+inline void ActorData::clear_actor_type() {
+  _impl_.actor_type_ = 0;
+}
+inline ::Protocol::EActorType ActorData::_internal_actor_type() const {
+  return static_cast< ::Protocol::EActorType >(_impl_.actor_type_);
+}
+inline ::Protocol::EActorType ActorData::actor_type() const {
+  // @@protoc_insertion_point(field_get:Protocol.ActorData.actor_type)
+  return _internal_actor_type();
+}
+inline void ActorData::_internal_set_actor_type(::Protocol::EActorType value) {
+  
+  _impl_.actor_type_ = value;
+}
+inline void ActorData::set_actor_type(::Protocol::EActorType value) {
+  _internal_set_actor_type(value);
+  // @@protoc_insertion_point(field_set:Protocol.ActorData.actor_type)
+}
+
+// .Protocol.EActorState actor_state = 3;
+inline void ActorData::clear_actor_state() {
+  _impl_.actor_state_ = 0;
+}
+inline ::Protocol::EActorState ActorData::_internal_actor_state() const {
+  return static_cast< ::Protocol::EActorState >(_impl_.actor_state_);
+}
+inline ::Protocol::EActorState ActorData::actor_state() const {
+  // @@protoc_insertion_point(field_get:Protocol.ActorData.actor_state)
+  return _internal_actor_state();
+}
+inline void ActorData::_internal_set_actor_state(::Protocol::EActorState value) {
+  
+  _impl_.actor_state_ = value;
+}
+inline void ActorData::set_actor_state(::Protocol::EActorState value) {
+  _internal_set_actor_state(value);
+  // @@protoc_insertion_point(field_set:Protocol.ActorData.actor_state)
+}
+
+// .Protocol.PositionData position_data = 4;
 inline bool ActorData::_internal_has_position_data() const {
   return this != internal_default_instance() && _impl_.position_data_ != nullptr;
 }
@@ -1723,7 +1774,7 @@ inline void ActorData::set_allocated_position_data(::Protocol::PositionData* pos
   // @@protoc_insertion_point(field_set_allocated:Protocol.ActorData.position_data)
 }
 
-// .Protocol.MoveData move_data = 3;
+// .Protocol.MoveData move_data = 5;
 inline bool ActorData::_internal_has_move_data() const {
   return this != internal_default_instance() && _impl_.move_data_ != nullptr;
 }
@@ -1811,26 +1862,6 @@ inline void ActorData::set_allocated_move_data(::Protocol::MoveData* move_data) 
   }
   _impl_.move_data_ = move_data;
   // @@protoc_insertion_point(field_set_allocated:Protocol.ActorData.move_data)
-}
-
-// .Protocol.EActorType actor_type = 4;
-inline void ActorData::clear_actor_type() {
-  _impl_.actor_type_ = 0;
-}
-inline ::Protocol::EActorType ActorData::_internal_actor_type() const {
-  return static_cast< ::Protocol::EActorType >(_impl_.actor_type_);
-}
-inline ::Protocol::EActorType ActorData::actor_type() const {
-  // @@protoc_insertion_point(field_get:Protocol.ActorData.actor_type)
-  return _internal_actor_type();
-}
-inline void ActorData::_internal_set_actor_type(::Protocol::EActorType value) {
-  
-  _impl_.actor_type_ = value;
-}
-inline void ActorData::set_actor_type(::Protocol::EActorType value) {
-  _internal_set_actor_type(value);
-  // @@protoc_insertion_point(field_set:Protocol.ActorData.actor_type)
 }
 
 // -------------------------------------------------------------------

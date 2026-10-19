@@ -6,6 +6,6 @@ Character::~Character() {}
 
 void Character::BindStats(string name, int32 level)
 {
-    _characterData.name = name;
-    _characterData.level = level;
+    _characterInfo.name = name;
+    _characterInfo.level = level;
 }

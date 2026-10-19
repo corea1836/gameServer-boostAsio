@@ -1,11 +1,11 @@
 #pragma once
 
+#include "MathUtils.h"
+#include "Types.h"
 #include "protobuf/Enum.pb.h"
 #include "protobuf/Struct.pb.h"
 #include <functional>
 #include <memory>
-
-class Vector3;
 
 using CallbackFunc = std::function<void()>;
 
@@ -26,25 +26,32 @@ USING_WEAK_PTR(World);
     using name##UniqueRef = std::unique_ptr<class name>
 USING_UNIQUE_PTR(GameLoop);
 
-struct MoveData
+struct MoveInfo
 {
-        float direction_x = 0, direction_y = 0, direction_z = 0;
+        Vector3 direction;
         float yaw = 0;
-        float position_x = 0, position_y = 0;
+        Vector3 currentPosition;
         Protocol::EMoveState move_state =
             Protocol::EMoveState::EMOVE_STATE_STOP;
+        int64 lastUpdateTick = 0;
+        bool lastMulticastMoving = false;
 
         Protocol::MoveData ToProto() const
         {
             Protocol::MoveData data;
-            data.set_direction_x(direction_x);
-            data.set_direction_y(direction_y);
-            data.set_direction_z(direction_z);
+            data.set_direction_x(direction.x);
+            data.set_direction_y(direction.y);
+            data.set_direction_z(direction.z);
             data.set_yaw(yaw);
-            data.set_position_x(position_x);
-            data.set_position_y(position_y);
+            data.set_current_position_x(currentPosition.x);
+            data.set_current_position_y(currentPosition.y);
             data.set_move_state(move_state);
 
             return data;
+        }
+
+        bool GetNeedMove() const
+        {
+            return move_state == Protocol::EMOVE_STATE_MOVE;
         }
 };

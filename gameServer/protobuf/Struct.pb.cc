@@ -41,8 +41,8 @@ PROTOBUF_CONSTEXPR MoveData::MoveData(
   , /*decltype(_impl_.direction_y_)*/0
   , /*decltype(_impl_.direction_z_)*/0
   , /*decltype(_impl_.yaw_)*/0
-  , /*decltype(_impl_.position_x_)*/0
-  , /*decltype(_impl_.position_y_)*/0
+  , /*decltype(_impl_.current_position_x_)*/0
+  , /*decltype(_impl_.current_position_y_)*/0
   , /*decltype(_impl_.move_state_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct MoveDataDefaultTypeInternal {
@@ -76,6 +76,7 @@ PROTOBUF_CONSTEXPR ActorData::ActorData(
   , /*decltype(_impl_.move_data_)*/nullptr
   , /*decltype(_impl_.actor_id_)*/int64_t{0}
   , /*decltype(_impl_.actor_type_)*/0
+  , /*decltype(_impl_.actor_state_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct ActorDataDefaultTypeInternal {
   PROTOBUF_CONSTEXPR ActorDataDefaultTypeInternal()
@@ -151,8 +152,8 @@ const uint32_t TableStruct_Struct_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(p
   PROTOBUF_FIELD_OFFSET(::Protocol::MoveData, _impl_.direction_y_),
   PROTOBUF_FIELD_OFFSET(::Protocol::MoveData, _impl_.direction_z_),
   PROTOBUF_FIELD_OFFSET(::Protocol::MoveData, _impl_.yaw_),
-  PROTOBUF_FIELD_OFFSET(::Protocol::MoveData, _impl_.position_x_),
-  PROTOBUF_FIELD_OFFSET(::Protocol::MoveData, _impl_.position_y_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::MoveData, _impl_.current_position_x_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::MoveData, _impl_.current_position_y_),
   PROTOBUF_FIELD_OFFSET(::Protocol::MoveData, _impl_.move_state_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Protocol::PositionData, _internal_metadata_),
@@ -171,9 +172,10 @@ const uint32_t TableStruct_Struct_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(p
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::Protocol::ActorData, _impl_.actor_id_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::ActorData, _impl_.actor_type_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::ActorData, _impl_.actor_state_),
   PROTOBUF_FIELD_OFFSET(::Protocol::ActorData, _impl_.position_data_),
   PROTOBUF_FIELD_OFFSET(::Protocol::ActorData, _impl_.move_data_),
-  PROTOBUF_FIELD_OFFSET(::Protocol::ActorData, _impl_.actor_type_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Protocol::CharacterData, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -203,9 +205,9 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 8, -1, -1, sizeof(::Protocol::MoveData)},
   { 21, -1, -1, sizeof(::Protocol::PositionData)},
   { 31, -1, -1, sizeof(::Protocol::ActorData)},
-  { 41, -1, -1, sizeof(::Protocol::CharacterData)},
-  { 50, -1, -1, sizeof(::Protocol::PlayerData)},
-  { 57, -1, -1, sizeof(::Protocol::SelectedPlayerData)},
+  { 42, -1, -1, sizeof(::Protocol::CharacterData)},
+  { 51, -1, -1, sizeof(::Protocol::PlayerData)},
+  { 58, -1, -1, sizeof(::Protocol::SelectedPlayerData)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -221,30 +223,31 @@ static const ::_pb::Message* const file_default_instances[] = {
 const char descriptor_table_protodef_Struct_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\014Struct.proto\022\010Protocol\032\nEnum.proto\"-\n\t"
   "WorldData\022\020\n\010world_id\030\001 \001(\005\022\016\n\006map_id\030\002 "
-  "\001(\005\"\250\001\n\010MoveData\022\023\n\013direction_x\030\001 \001(\002\022\023\n"
+  "\001(\005\"\270\001\n\010MoveData\022\023\n\013direction_x\030\001 \001(\002\022\023\n"
   "\013direction_y\030\002 \001(\002\022\023\n\013direction_z\030\003 \001(\002\022"
-  "\013\n\003yaw\030\004 \001(\002\022\022\n\nposition_x\030\005 \001(\002\022\022\n\nposi"
-  "tion_y\030\006 \001(\002\022(\n\nmove_state\030\007 \001(\0162\024.Proto"
-  "col.EMoveState\"<\n\014PositionData\022\t\n\001x\030\001 \001("
-  "\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\022\013\n\003yaw\030\004 \001(\002\"\235\001\n"
-  "\tActorData\022\020\n\010actor_id\030\001 \001(\003\022-\n\rposition"
-  "_data\030\002 \001(\0132\026.Protocol.PositionData\022%\n\tm"
-  "ove_data\030\003 \001(\0132\022.Protocol.MoveData\022(\n\nac"
-  "tor_type\030\004 \001(\0162\024.Protocol.EActorType\"U\n\r"
-  "CharacterData\022\'\n\nactor_data\030\001 \001(\0132\023.Prot"
-  "ocol.ActorData\022\014\n\004name\030\002 \001(\t\022\r\n\005level\030\003 "
-  "\001(\005\"=\n\nPlayerData\022/\n\016character_data\030\001 \001("
-  "\0132\027.Protocol.CharacterData\"\?\n\022SelectedPl"
-  "ayerData\022)\n\013player_data\030\001 \001(\0132\024.Protocol"
-  ".PlayerDataB\033\252\002\030Google.Protobuf.Protocol"
-  "b\006proto3"
+  "\013\n\003yaw\030\004 \001(\002\022\032\n\022current_position_x\030\005 \001(\002"
+  "\022\032\n\022current_position_y\030\006 \001(\002\022(\n\nmove_sta"
+  "te\030\007 \001(\0162\024.Protocol.EMoveState\"<\n\014Positi"
+  "onData\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\022"
+  "\013\n\003yaw\030\004 \001(\002\"\311\001\n\tActorData\022\020\n\010actor_id\030\001"
+  " \001(\003\022(\n\nactor_type\030\002 \001(\0162\024.Protocol.EAct"
+  "orType\022*\n\013actor_state\030\003 \001(\0162\025.Protocol.E"
+  "ActorState\022-\n\rposition_data\030\004 \001(\0132\026.Prot"
+  "ocol.PositionData\022%\n\tmove_data\030\005 \001(\0132\022.P"
+  "rotocol.MoveData\"U\n\rCharacterData\022\'\n\nact"
+  "or_data\030\001 \001(\0132\023.Protocol.ActorData\022\014\n\004na"
+  "me\030\002 \001(\t\022\r\n\005level\030\003 \001(\005\"=\n\nPlayerData\022/\n"
+  "\016character_data\030\001 \001(\0132\027.Protocol.Charact"
+  "erData\"\?\n\022SelectedPlayerData\022)\n\013player_d"
+  "ata\030\001 \001(\0132\024.Protocol.PlayerDataB\033\252\002\030Goog"
+  "le.Protobuf.Protocolb\006proto3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_Struct_2eproto_deps[1] = {
   &::descriptor_table_Enum_2eproto,
 };
 static ::_pbi::once_flag descriptor_table_Struct_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_Struct_2eproto = {
-    false, false, 728, descriptor_table_protodef_Struct_2eproto,
+    false, false, 788, descriptor_table_protodef_Struct_2eproto,
     "Struct.proto",
     &descriptor_table_Struct_2eproto_once, descriptor_table_Struct_2eproto_deps, 1, 7,
     schemas, file_default_instances, TableStruct_Struct_2eproto::offsets,
@@ -490,8 +493,8 @@ MoveData::MoveData(const MoveData& from)
     , decltype(_impl_.direction_y_){}
     , decltype(_impl_.direction_z_){}
     , decltype(_impl_.yaw_){}
-    , decltype(_impl_.position_x_){}
-    , decltype(_impl_.position_y_){}
+    , decltype(_impl_.current_position_x_){}
+    , decltype(_impl_.current_position_y_){}
     , decltype(_impl_.move_state_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
@@ -511,8 +514,8 @@ inline void MoveData::SharedCtor(
     , decltype(_impl_.direction_y_){0}
     , decltype(_impl_.direction_z_){0}
     , decltype(_impl_.yaw_){0}
-    , decltype(_impl_.position_x_){0}
-    , decltype(_impl_.position_y_){0}
+    , decltype(_impl_.current_position_x_){0}
+    , decltype(_impl_.current_position_y_){0}
     , decltype(_impl_.move_state_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -585,18 +588,18 @@ const char* MoveData::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx)
         } else
           goto handle_unusual;
         continue;
-      // float position_x = 5;
+      // float current_position_x = 5;
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 45)) {
-          _impl_.position_x_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          _impl_.current_position_x_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
           ptr += sizeof(float);
         } else
           goto handle_unusual;
         continue;
-      // float position_y = 6;
+      // float current_position_y = 6;
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 53)) {
-          _impl_.position_y_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          _impl_.current_position_y_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
           ptr += sizeof(float);
         } else
           goto handle_unusual;
@@ -679,24 +682,24 @@ uint8_t* MoveData::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteFloatToArray(4, this->_internal_yaw(), target);
   }
 
-  // float position_x = 5;
+  // float current_position_x = 5;
   static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_position_x = this->_internal_position_x();
-  uint32_t raw_position_x;
-  memcpy(&raw_position_x, &tmp_position_x, sizeof(tmp_position_x));
-  if (raw_position_x != 0) {
+  float tmp_current_position_x = this->_internal_current_position_x();
+  uint32_t raw_current_position_x;
+  memcpy(&raw_current_position_x, &tmp_current_position_x, sizeof(tmp_current_position_x));
+  if (raw_current_position_x != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteFloatToArray(5, this->_internal_position_x(), target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(5, this->_internal_current_position_x(), target);
   }
 
-  // float position_y = 6;
+  // float current_position_y = 6;
   static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_position_y = this->_internal_position_y();
-  uint32_t raw_position_y;
-  memcpy(&raw_position_y, &tmp_position_y, sizeof(tmp_position_y));
-  if (raw_position_y != 0) {
+  float tmp_current_position_y = this->_internal_current_position_y();
+  uint32_t raw_current_position_y;
+  memcpy(&raw_current_position_y, &tmp_current_position_y, sizeof(tmp_current_position_y));
+  if (raw_current_position_y != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteFloatToArray(6, this->_internal_position_y(), target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(6, this->_internal_current_position_y(), target);
   }
 
   // .Protocol.EMoveState move_state = 7;
@@ -758,21 +761,21 @@ size_t MoveData::ByteSizeLong() const {
     total_size += 1 + 4;
   }
 
-  // float position_x = 5;
+  // float current_position_x = 5;
   static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_position_x = this->_internal_position_x();
-  uint32_t raw_position_x;
-  memcpy(&raw_position_x, &tmp_position_x, sizeof(tmp_position_x));
-  if (raw_position_x != 0) {
+  float tmp_current_position_x = this->_internal_current_position_x();
+  uint32_t raw_current_position_x;
+  memcpy(&raw_current_position_x, &tmp_current_position_x, sizeof(tmp_current_position_x));
+  if (raw_current_position_x != 0) {
     total_size += 1 + 4;
   }
 
-  // float position_y = 6;
+  // float current_position_y = 6;
   static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_position_y = this->_internal_position_y();
-  uint32_t raw_position_y;
-  memcpy(&raw_position_y, &tmp_position_y, sizeof(tmp_position_y));
-  if (raw_position_y != 0) {
+  float tmp_current_position_y = this->_internal_current_position_y();
+  uint32_t raw_current_position_y;
+  memcpy(&raw_current_position_y, &tmp_current_position_y, sizeof(tmp_current_position_y));
+  if (raw_current_position_y != 0) {
     total_size += 1 + 4;
   }
 
@@ -829,18 +832,18 @@ void MoveData::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTO
     _this->_internal_set_yaw(from._internal_yaw());
   }
   static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_position_x = from._internal_position_x();
-  uint32_t raw_position_x;
-  memcpy(&raw_position_x, &tmp_position_x, sizeof(tmp_position_x));
-  if (raw_position_x != 0) {
-    _this->_internal_set_position_x(from._internal_position_x());
+  float tmp_current_position_x = from._internal_current_position_x();
+  uint32_t raw_current_position_x;
+  memcpy(&raw_current_position_x, &tmp_current_position_x, sizeof(tmp_current_position_x));
+  if (raw_current_position_x != 0) {
+    _this->_internal_set_current_position_x(from._internal_current_position_x());
   }
   static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_position_y = from._internal_position_y();
-  uint32_t raw_position_y;
-  memcpy(&raw_position_y, &tmp_position_y, sizeof(tmp_position_y));
-  if (raw_position_y != 0) {
-    _this->_internal_set_position_y(from._internal_position_y());
+  float tmp_current_position_y = from._internal_current_position_y();
+  uint32_t raw_current_position_y;
+  memcpy(&raw_current_position_y, &tmp_current_position_y, sizeof(tmp_current_position_y));
+  if (raw_current_position_y != 0) {
+    _this->_internal_set_current_position_y(from._internal_current_position_y());
   }
   if (from._internal_move_state() != 0) {
     _this->_internal_set_move_state(from._internal_move_state());
@@ -1213,6 +1216,7 @@ ActorData::ActorData(const ActorData& from)
     , decltype(_impl_.move_data_){nullptr}
     , decltype(_impl_.actor_id_){}
     , decltype(_impl_.actor_type_){}
+    , decltype(_impl_.actor_state_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -1223,8 +1227,8 @@ ActorData::ActorData(const ActorData& from)
     _this->_impl_.move_data_ = new ::Protocol::MoveData(*from._impl_.move_data_);
   }
   ::memcpy(&_impl_.actor_id_, &from._impl_.actor_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.actor_type_) -
-    reinterpret_cast<char*>(&_impl_.actor_id_)) + sizeof(_impl_.actor_type_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.actor_state_) -
+    reinterpret_cast<char*>(&_impl_.actor_id_)) + sizeof(_impl_.actor_state_));
   // @@protoc_insertion_point(copy_constructor:Protocol.ActorData)
 }
 
@@ -1237,6 +1241,7 @@ inline void ActorData::SharedCtor(
     , decltype(_impl_.move_data_){nullptr}
     , decltype(_impl_.actor_id_){int64_t{0}}
     , decltype(_impl_.actor_type_){0}
+    , decltype(_impl_.actor_state_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -1275,8 +1280,8 @@ void ActorData::Clear() {
   }
   _impl_.move_data_ = nullptr;
   ::memset(&_impl_.actor_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.actor_type_) -
-      reinterpret_cast<char*>(&_impl_.actor_id_)) + sizeof(_impl_.actor_type_));
+      reinterpret_cast<char*>(&_impl_.actor_state_) -
+      reinterpret_cast<char*>(&_impl_.actor_id_)) + sizeof(_impl_.actor_state_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1294,28 +1299,37 @@ const char* ActorData::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx
         } else
           goto handle_unusual;
         continue;
-      // .Protocol.PositionData position_data = 2;
+      // .Protocol.EActorType actor_type = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_actor_type(static_cast<::Protocol::EActorType>(val));
+        } else
+          goto handle_unusual;
+        continue;
+      // .Protocol.EActorState actor_state = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_actor_state(static_cast<::Protocol::EActorState>(val));
+        } else
+          goto handle_unusual;
+        continue;
+      // .Protocol.PositionData position_data = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_position_data(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // .Protocol.MoveData move_data = 3;
-      case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+      // .Protocol.MoveData move_data = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr = ctx->ParseMessage(_internal_mutable_move_data(), ptr);
           CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // .Protocol.EActorType actor_type = 4;
-      case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
-          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
-          CHK_(ptr);
-          _internal_set_actor_type(static_cast<::Protocol::EActorType>(val));
         } else
           goto handle_unusual;
         continue;
@@ -1354,25 +1368,32 @@ uint8_t* ActorData::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_actor_id(), target);
   }
 
-  // .Protocol.PositionData position_data = 2;
-  if (this->_internal_has_position_data()) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(2, _Internal::position_data(this),
-        _Internal::position_data(this).GetCachedSize(), target, stream);
-  }
-
-  // .Protocol.MoveData move_data = 3;
-  if (this->_internal_has_move_data()) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(3, _Internal::move_data(this),
-        _Internal::move_data(this).GetCachedSize(), target, stream);
-  }
-
-  // .Protocol.EActorType actor_type = 4;
+  // .Protocol.EActorType actor_type = 2;
   if (this->_internal_actor_type() != 0) {
     target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteEnumToArray(
-      4, this->_internal_actor_type(), target);
+      2, this->_internal_actor_type(), target);
+  }
+
+  // .Protocol.EActorState actor_state = 3;
+  if (this->_internal_actor_state() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
+      3, this->_internal_actor_state(), target);
+  }
+
+  // .Protocol.PositionData position_data = 4;
+  if (this->_internal_has_position_data()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(4, _Internal::position_data(this),
+        _Internal::position_data(this).GetCachedSize(), target, stream);
+  }
+
+  // .Protocol.MoveData move_data = 5;
+  if (this->_internal_has_move_data()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(5, _Internal::move_data(this),
+        _Internal::move_data(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -1391,14 +1412,14 @@ size_t ActorData::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // .Protocol.PositionData position_data = 2;
+  // .Protocol.PositionData position_data = 4;
   if (this->_internal_has_position_data()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *_impl_.position_data_);
   }
 
-  // .Protocol.MoveData move_data = 3;
+  // .Protocol.MoveData move_data = 5;
   if (this->_internal_has_move_data()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
@@ -1410,10 +1431,16 @@ size_t ActorData::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_actor_id());
   }
 
-  // .Protocol.EActorType actor_type = 4;
+  // .Protocol.EActorType actor_type = 2;
   if (this->_internal_actor_type() != 0) {
     total_size += 1 +
       ::_pbi::WireFormatLite::EnumSize(this->_internal_actor_type());
+  }
+
+  // .Protocol.EActorState actor_state = 3;
+  if (this->_internal_actor_state() != 0) {
+    total_size += 1 +
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_actor_state());
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
@@ -1448,6 +1475,9 @@ void ActorData::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROT
   if (from._internal_actor_type() != 0) {
     _this->_internal_set_actor_type(from._internal_actor_type());
   }
+  if (from._internal_actor_state() != 0) {
+    _this->_internal_set_actor_state(from._internal_actor_state());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -1466,8 +1496,8 @@ void ActorData::InternalSwap(ActorData* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(ActorData, _impl_.actor_type_)
-      + sizeof(ActorData::_impl_.actor_type_)
+      PROTOBUF_FIELD_OFFSET(ActorData, _impl_.actor_state_)
+      + sizeof(ActorData::_impl_.actor_state_)
       - PROTOBUF_FIELD_OFFSET(ActorData, _impl_.position_data_)>(
           reinterpret_cast<char*>(&_impl_.position_data_),
           reinterpret_cast<char*>(&other->_impl_.position_data_));

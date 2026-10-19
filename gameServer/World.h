@@ -1,11 +1,13 @@
 #pragma once
 
 #include "ActorFactory.h"
+#include "GameTypes.h"
 #include <unordered_map>
 
 class World : public std::enable_shared_from_this<World>
 {
     public:
+        static constexpr int64 TICK_INTERVAL_MS = 100;
         World();
         ~World();
 
@@ -20,7 +22,7 @@ class World : public std::enable_shared_from_this<World>
         void EnterPlayer(PlayerRef player);
         void LeavePlayer(int64 playerId);
 
-        void HandleMove(PlayerRef player, MoveData movdData);
+        void HandleMove(PlayerRef player, MoveInfo nextMove);
 
     private:
         template <typename T> std::shared_ptr<T> Spawn()
@@ -28,10 +30,17 @@ class World : public std::enable_shared_from_this<World>
             return ActorFactory::Create<T>();
         }
 
+        void Tick();
+        void StartTick();
+        void UpdatePosition(float deltaTime);
+        void MulticastMove();
+
         void LeavePlayer_Internal(int64 playerId);
-        void HandleMove_Internal(PlayerRef player, MoveData movdData);
+        void HandleMove_Internal(PlayerRef player, MoveInfo nextMove);
 
         JobSerializerRef _jobs;
         std::unordered_map<int64, PlayerRef> _players;
         std::atomic<bool> _isClosed = false;
+        int64 _lastTickTime = 0;
+        bool _isTickRunning = false;
 };

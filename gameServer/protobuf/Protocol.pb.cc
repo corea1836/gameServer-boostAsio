@@ -159,6 +159,7 @@ PROTOBUF_CONSTEXPR S_Move::S_Move(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.move_data_)*/nullptr
   , /*decltype(_impl_.actor_id_)*/int64_t{0}
+  , /*decltype(_impl_.server_time_)*/int64_t{0}
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct S_MoveDefaultTypeInternal {
   PROTOBUF_CONSTEXPR S_MoveDefaultTypeInternal()
@@ -255,6 +256,7 @@ const uint32_t TableStruct_Protocol_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::Protocol::S_Move, _impl_.actor_id_),
   PROTOBUF_FIELD_OFFSET(::Protocol::S_Move, _impl_.move_data_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::S_Move, _impl_.server_time_),
 };
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, -1, sizeof(::Protocol::S_Connected)},
@@ -298,9 +300,10 @@ const char descriptor_table_protodef_Protocol_2eproto[] PROTOBUF_SECTION_VARIABL
   "\007S_Spawn\022%\n\007players\030\001 \003(\0132\024.Protocol.Pla"
   "yerData\"\036\n\tS_Despawn\022\021\n\tactor_ids\030\001 \003(\003\""
   "/\n\006C_Move\022%\n\tmove_data\030\001 \001(\0132\022.Protocol."
-  "MoveData\"A\n\006S_Move\022\020\n\010actor_id\030\001 \001(\003\022%\n\t"
-  "move_data\030\002 \001(\0132\022.Protocol.MoveDataB\033\252\002\030"
-  "Google.Protobuf.ProtocolP\000P\001b\006proto3"
+  "MoveData\"V\n\006S_Move\022\020\n\010actor_id\030\001 \001(\003\022%\n\t"
+  "move_data\030\002 \001(\0132\022.Protocol.MoveData\022\023\n\013s"
+  "erver_time\030\003 \001(\003B\033\252\002\030Google.Protobuf.Pro"
+  "tocolP\000P\001b\006proto3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_deps[2] = {
   &::descriptor_table_Enum_2eproto,
@@ -308,7 +311,7 @@ static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_de
 };
 static ::_pbi::once_flag descriptor_table_Protocol_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_Protocol_2eproto = {
-    false, false, 556, descriptor_table_protodef_Protocol_2eproto,
+    false, false, 577, descriptor_table_protodef_Protocol_2eproto,
     "Protocol.proto",
     &descriptor_table_Protocol_2eproto_once, descriptor_table_Protocol_2eproto_deps, 2, 12,
     schemas, file_default_instances, TableStruct_Protocol_2eproto::offsets,
@@ -1697,13 +1700,16 @@ S_Move::S_Move(const S_Move& from)
   new (&_impl_) Impl_{
       decltype(_impl_.move_data_){nullptr}
     , decltype(_impl_.actor_id_){}
+    , decltype(_impl_.server_time_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_move_data()) {
     _this->_impl_.move_data_ = new ::Protocol::MoveData(*from._impl_.move_data_);
   }
-  _this->_impl_.actor_id_ = from._impl_.actor_id_;
+  ::memcpy(&_impl_.actor_id_, &from._impl_.actor_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.server_time_) -
+    reinterpret_cast<char*>(&_impl_.actor_id_)) + sizeof(_impl_.server_time_));
   // @@protoc_insertion_point(copy_constructor:Protocol.S_Move)
 }
 
@@ -1714,6 +1720,7 @@ inline void S_Move::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.move_data_){nullptr}
     , decltype(_impl_.actor_id_){int64_t{0}}
+    , decltype(_impl_.server_time_){int64_t{0}}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -1746,7 +1753,9 @@ void S_Move::Clear() {
     delete _impl_.move_data_;
   }
   _impl_.move_data_ = nullptr;
-  _impl_.actor_id_ = int64_t{0};
+  ::memset(&_impl_.actor_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.server_time_) -
+      reinterpret_cast<char*>(&_impl_.actor_id_)) + sizeof(_impl_.server_time_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1768,6 +1777,14 @@ const char* S_Move::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_move_data(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 server_time = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.server_time_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1814,6 +1831,12 @@ uint8_t* S_Move::_InternalSerialize(
         _Internal::move_data(this).GetCachedSize(), target, stream);
   }
 
+  // int64 server_time = 3;
+  if (this->_internal_server_time() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_server_time(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -1842,6 +1865,11 @@ size_t S_Move::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_actor_id());
   }
 
+  // int64 server_time = 3;
+  if (this->_internal_server_time() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_server_time());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -1867,6 +1895,9 @@ void S_Move::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBU
   if (from._internal_actor_id() != 0) {
     _this->_internal_set_actor_id(from._internal_actor_id());
   }
+  if (from._internal_server_time() != 0) {
+    _this->_internal_set_server_time(from._internal_server_time());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -1885,8 +1916,8 @@ void S_Move::InternalSwap(S_Move* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(S_Move, _impl_.actor_id_)
-      + sizeof(S_Move::_impl_.actor_id_)
+      PROTOBUF_FIELD_OFFSET(S_Move, _impl_.server_time_)
+      + sizeof(S_Move::_impl_.server_time_)
       - PROTOBUF_FIELD_OFFSET(S_Move, _impl_.move_data_)>(
           reinterpret_cast<char*>(&_impl_.move_data_),
           reinterpret_cast<char*>(&other->_impl_.move_data_));

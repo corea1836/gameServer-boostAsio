@@ -1754,6 +1754,7 @@ class S_Move final :
   enum : int {
     kMoveDataFieldNumber = 2,
     kActorIdFieldNumber = 1,
+    kServerTimeFieldNumber = 3,
   };
   // .Protocol.MoveData move_data = 2;
   bool has_move_data() const;
@@ -1782,6 +1783,15 @@ class S_Move final :
   void _internal_set_actor_id(int64_t value);
   public:
 
+  // int64 server_time = 3;
+  void clear_server_time();
+  int64_t server_time() const;
+  void set_server_time(int64_t value);
+  private:
+  int64_t _internal_server_time() const;
+  void _internal_set_server_time(int64_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:Protocol.S_Move)
  private:
   class _Internal;
@@ -1792,6 +1802,7 @@ class S_Move final :
   struct Impl_ {
     ::Protocol::MoveData* move_data_;
     int64_t actor_id_;
+    int64_t server_time_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -2266,6 +2277,26 @@ inline void S_Move::set_allocated_move_data(::Protocol::MoveData* move_data) {
   }
   _impl_.move_data_ = move_data;
   // @@protoc_insertion_point(field_set_allocated:Protocol.S_Move.move_data)
+}
+
+// int64 server_time = 3;
+inline void S_Move::clear_server_time() {
+  _impl_.server_time_ = int64_t{0};
+}
+inline int64_t S_Move::_internal_server_time() const {
+  return _impl_.server_time_;
+}
+inline int64_t S_Move::server_time() const {
+  // @@protoc_insertion_point(field_get:Protocol.S_Move.server_time)
+  return _internal_server_time();
+}
+inline void S_Move::_internal_set_server_time(int64_t value) {
+  
+  _impl_.server_time_ = value;
+}
+inline void S_Move::set_server_time(int64_t value) {
+  _internal_set_server_time(value);
+  // @@protoc_insertion_point(field_set:Protocol.S_Move.server_time)
 }
 
 #ifdef __GNUC__

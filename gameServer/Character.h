@@ -2,7 +2,7 @@
 
 #include "Actor.h"
 
-struct CharacterData
+struct CharacterInfo
 {
         string name;
         int32 level;
@@ -19,8 +19,8 @@ class Character : public Actor
         Protocol::CharacterData ToProto() const
         {
             Protocol::CharacterData data;
-            data.set_name(_characterData.name);
-            data.set_level(_characterData.level);
+            data.set_name(_characterInfo.name);
+            data.set_level(_characterInfo.level);
             *data.mutable_actor_data() = Super::ToProto();
 
             return data;
@@ -29,5 +29,5 @@ class Character : public Actor
         void BindStats(string name, int32 level);
 
     private:
-        CharacterData _characterData;
+        CharacterInfo _characterInfo;
 };

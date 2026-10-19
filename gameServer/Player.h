@@ -11,7 +11,7 @@ class Player : public Character
     public:
         Player()
         {
-            Super::GetActorData().actorType =
+            Super::GetActorInfo().actorType =
                 Protocol::EActorType::EACTOR_TYPE_PLAYER;
         }
         ~Player() override;

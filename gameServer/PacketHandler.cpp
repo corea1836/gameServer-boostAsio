@@ -16,9 +16,11 @@ bool Handle_C_FindMyPlayers(GameSessionRef &session,
     auto player = ActorFactory::Create<Player>();
     player->BindStats("chulsu", 1);
     player->Bind(session);
-    player->GetPositionData().y = 0.f;
-    player->GetPositionData().x = 0.f;
-    player->GetPositionData().yaw = 0.f;
+    player->GetCurrentPositionInfo().position.x = 0.f;
+    player->GetCurrentPositionInfo().position.y = 0.f;
+    player->GetCurrentPositionInfo().yaw = 0.f;
+    player->GetMoveInfo().currentPosition.x = 0.f;
+    player->GetMoveInfo().currentPosition.y = 0.f;
 
     // TODO : split load db playerData and selectedPlayer
     session->AddPlayer(player);
@@ -26,19 +28,22 @@ bool Handle_C_FindMyPlayers(GameSessionRef &session,
     auto player2 = ActorFactory::Create<Player>();
     player2->BindStats("younghi", 5);
     player2->Bind(session);
-    player2->GetPositionData().y = 10.f;
-    player2->GetPositionData().x = 10.f;
-    player2->GetPositionData().yaw = 10.f;
-
+    player2->GetCurrentPositionInfo().position.x = 10.f;
+    player2->GetCurrentPositionInfo().position.y = 10.f;
+    player2->GetCurrentPositionInfo().yaw = 10.f;
+    player2->GetMoveInfo().currentPosition.x = 10.f;
+    player2->GetMoveInfo().currentPosition.y = 10.f;
     session->AddPlayer(player2);
 
     auto player3 = ActorFactory::Create<Player>();
     player3->BindStats("huni", 10);
     player3->Bind(session);
-    player3->GetPositionData().y = 5.f;
-    player3->GetPositionData().x = 5.f;
-    player3->GetPositionData().yaw = 10.f;
+    player3->GetCurrentPositionInfo().position.x = 5.f;
+    player3->GetCurrentPositionInfo().position.y = 5.f;
+    player3->GetCurrentPositionInfo().yaw = 10.f;
 
+    player3->GetMoveInfo().currentPosition.x = 5.f;
+    player3->GetMoveInfo().currentPosition.y = 5.f;
     session->AddPlayer(player3);
     // TODO : split load db playerData and selectedPlayer
 
@@ -77,7 +82,7 @@ bool Handle_C_LeaveWorld(GameSessionRef &session, Protocol::C_LeaveWorld &pkt)
     if (world == nullptr)
         return false;
 
-    world->LeavePlayer(player->GetActorData().actorId);
+    world->LeavePlayer(player->GetActorInfo().actorId);
 
     return true;
 }
@@ -100,13 +105,15 @@ bool Handle_C_Move(GameSessionRef &session, Protocol::C_Move &pkt)
     if (world == nullptr)
         return false;
 
-    MoveData moveData = {
-        pkt.move_data().direction_x(), pkt.move_data().direction_y(),
-        pkt.move_data().direction_z(), pkt.move_data().yaw(),
-        pkt.move_data().position_x(),  pkt.move_data().position_y(),
-        pkt.move_data().move_state()};
+    MoveInfo moveInfo = {Vector3{pkt.move_data().direction_x(),
+                                 pkt.move_data().direction_y(),
+                                 pkt.move_data().direction_z()},
+                         pkt.move_data().yaw(),
+                         Vector3{pkt.move_data().current_position_x(),
+                                 pkt.move_data().current_position_y(), 0},
+                         pkt.move_data().move_state(), 0};
 
-    world->HandleMove(player, moveData);
+    world->HandleMove(player, moveInfo);
 
     return true;
 }

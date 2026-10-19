@@ -19,7 +19,7 @@ struct Vector3
 
         Vector3 operator*(float s) const { return {x * s, y * s, z * s}; }
 
-        bool operator==(const Vector3 &other)
+        bool operator==(const Vector3 &other) const
         {
             const float epsilon = 0.0001f;
             return std::abs(x - other.x) < epsilon &&
@@ -27,10 +27,13 @@ struct Vector3
                    std::abs(z - other.z) < epsilon;
         }
 
-        bool operator!=(const Vector3 &other) { return !(*this == other); }
+        bool operator!=(const Vector3 &other) const
+        {
+            return !(*this == other);
+        }
 
-        float SqrtMagnitude() const { return x * x + y * y + z + z; }
-        float Magnitude() const { return std::sqrt(SqrtMagnitude()); }
+        float SqrMagnitude() const { return x * x + y * y + z * z; }
+        float Magnitude() const { return std::sqrt(SqrMagnitude()); }
         Vector3 Normalized() const
         {
             float magnitude = Magnitude();

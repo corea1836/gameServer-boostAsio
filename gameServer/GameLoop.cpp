@@ -60,7 +60,7 @@ void GameLoop::LeaveWorld(PlayerRef player)
                 return;
 
             currentWorld->Post(
-                [currentWorld, playerId = player->GetActorData().actorId]() {});
+                [currentWorld, playerId = player->GetActorInfo().actorId]() {});
         });
 }
 
@@ -79,7 +79,7 @@ void GameLoop::MoveWorld(int64 worldId, PlayerRef player)
             currentWorld->Post(
                 [this, worldId, player, currentWorld]()
                 {
-                    currentWorld->LeavePlayer(player->GetActorData().actorId);
+                    currentWorld->LeavePlayer(player->GetActorInfo().actorId);
                     EnterWorld(worldId, player);
                 });
         });
