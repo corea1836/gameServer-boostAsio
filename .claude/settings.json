@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && cmake -S . -B build >/dev/null && cmake --build build -j8 2>&1 && ctest --test-dir build --output-on-failure 2>&1",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" || exit 0; [ \"$(jq -r '.stop_hook_active // false')\" = \"true\" ] && exit 0; out=$( { cmake -S . -B build && cmake --build build -j8 && ctest --test-dir build --output-on-failure; } 2>&1 ) && exit 0; { printf '%s\\n' \"$out\" | grep -E 'CMake Error|error:|\\*\\*\\*Failed|\\*\\*\\*Timeout|Failure|exception|actual:|Which is|tests passed' || printf '%s\\n' \"$out\" | tail -20; } | head -40 >&2; exit 2",
             "timeout": 600
           }
         ]
