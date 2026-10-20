@@ -13,7 +13,7 @@ class GameSession : public Session
         }
         ~GameSession() override {}
 
-        void OnRead(byte *readPos, int32 readSize) override;
+        bool OnRead(byte *readPos, int32 readSize) override;
         void OnConnected() override;
         void OnDisconnected() override;
 

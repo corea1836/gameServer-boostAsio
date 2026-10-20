@@ -6,7 +6,7 @@
 #include "Player.h"
 #include "World.h"
 
-PacketHandlerFunc GPacketHandler[UINT16_MAX];
+PacketHandlerFunc GPacketHandler[UINT16_MAX + 1];
 
 bool Handle_C_FindMyPlayers(GameSessionRef &session,
                             Protocol::C_FindMyPlayers &pkt)
@@ -70,17 +70,17 @@ bool Handle_C_EnterWorld(GameSessionRef &session, Protocol::C_EnterWorld &pkt)
 bool Handle_C_LeaveWorld(GameSessionRef &session, Protocol::C_LeaveWorld &pkt)
 {
     if (session == nullptr || !session->IsConnected())
-        return false;
+        return true;
 
     PlayerRef player = session->GetSelectedPlayer();
 
     if (player == nullptr)
-        return false;
+        return true;
 
     WorldRef world = player->GetWorld();
 
     if (world == nullptr)
-        return false;
+        return true;
 
     world->LeavePlayer(player->GetActorInfo().actorId);
 
@@ -94,16 +94,16 @@ bool Handle_C_LeaveWorld(GameSessionRef &session, Protocol::C_LeaveWorld &pkt)
 bool Handle_C_Move(GameSessionRef &session, Protocol::C_Move &pkt)
 {
     if (session == nullptr)
-        return false;
+        return true;
 
     PlayerRef player = session->GetSelectedPlayer();
 
     if (player == nullptr)
-        return false;
+        return true;
 
     WorldRef world = player->GetWorld();
     if (world == nullptr)
-        return false;
+        return true;
 
     MoveInfo moveInfo = {Vector3{pkt.move_data().direction_x(),
                                  pkt.move_data().direction_y(),

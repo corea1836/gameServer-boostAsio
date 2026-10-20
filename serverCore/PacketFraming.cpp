@@ -18,7 +18,9 @@ bool ParsePackets(RecvBuffer &buffer, const PacketCallback &onPacket)
         if (buffer.GetDataSize() < header->size)
             break;
 
-        onPacket(buffer.GetReadPos(), header->size);
+        if (!onPacket(buffer.GetReadPos(), header->size))
+            return false;
+
         buffer.OnRead(header->size);
     }
 

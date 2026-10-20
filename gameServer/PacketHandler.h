@@ -5,9 +5,9 @@
 #include <CoreMacro.h>
 #include <PacketHeader.h>
 #include <SendBuffer.h>
-
+//TODO: false 를 반환하면 연결을 끊는다. 아직 준비 안 된 패킷은 처리하지 않고 true 를 반환한다.
 using PacketHandlerFunc = std::function<bool(GameSessionRef &, byte *, int32)>;
-extern PacketHandlerFunc GPacketHandler[UINT16_MAX];
+extern PacketHandlerFunc GPacketHandler[UINT16_MAX + 1];
 
 bool Handle_C_FindMyPlayers(GameSessionRef &session,
                             Protocol::C_FindMyPlayers &pkt);
@@ -70,7 +70,10 @@ class PacketHandler
                                  int32 size)
         {
             PacketHeader *header = reinterpret_cast<PacketHeader *>(buffer);
-            return GPacketHandler[header->id](session, buffer, size);
+            const auto &function = GPacketHandler[header->id];
+            if (function == nullptr) return false;
+
+            return function(session, buffer, size);
         };
 
         template <typename T>

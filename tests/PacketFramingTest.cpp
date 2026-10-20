@@ -34,6 +34,7 @@ PacketCallback CollectIds(std::vector<uint16> &ids)
         auto *header = reinterpret_cast<PacketHeader *>(packet);
         EXPECT_EQ(packetSize, header->size);
         ids.push_back(header->id);
+        return true;
     };
 }
 
@@ -106,4 +107,23 @@ TEST(PacketFraming, SplitHeaderIsParsedWhenCompleted)
     EXPECT_TRUE(ParsePackets(buffer, CollectIds(ids)));
     EXPECT_EQ(ids, std::vector<uint16>{1});
     EXPECT_EQ(buffer.GetDataSize(), 0);
+}
+
+TEST(PacketFraming, StopsWhenCallbackReturnsFalse)
+{
+    std::vector<uint16> ids;
+    RecvBuffer buffer(4096);
+    std::vector<byte> stream;
+    for (const auto &packet : {MakePacket(10, 1), MakePacket(8, 2), MakePacket(12, 3)}) {
+        stream.insert(stream.end(), packet.begin(), packet.end());
+    }
+
+    Receive(buffer, stream, 0, 10 + 8 + 12);
+    EXPECT_FALSE(ParsePackets(buffer, [&ids](byte *packet, int32 packetSize) {
+        auto *header = reinterpret_cast<PacketHeader *>(packet);
+        if (header->id == 2) return false;
+        ids.push_back(header->id);
+        return true;
+    }));
+    EXPECT_EQ(ids, (std::vector<uint16>{1}));
 }

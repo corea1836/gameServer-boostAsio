@@ -33,7 +33,7 @@ class Session : public std::enable_shared_from_this<Session>
         SessionRef GetSession() { return shared_from_this(); }
 
     protected:
-        virtual void OnRead(byte *readPos, int32 readSize) = 0;
+        virtual bool OnRead(byte *readPos, int32 readSize) = 0;
         virtual void OnConnected() = 0;
         virtual void OnDisconnected() = 0;
 

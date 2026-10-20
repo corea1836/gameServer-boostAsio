@@ -11,10 +11,12 @@ add_executable(T1Tests
     PacketFramingTest.cpp
     JobSerializerTest.cpp
     FixedTickerTest.cpp
+    PacketHandlerTest.cpp
 )
 
 target_link_libraries(T1Tests PRIVATE
     serverCore
+    gameServerLib
     GTest::gtest_main
 )
 

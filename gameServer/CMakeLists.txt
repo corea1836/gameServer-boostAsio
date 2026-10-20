@@ -16,10 +16,9 @@ set(COMMON_SOURCES
     ${PROTO_SOURCES}
 )
 
-# --- 서버 실행 파일 ---
-add_executable(GameServer
+# --- 서버 로직 (main 제외) — 테스트에서도 링크한다 ---
+add_library(gameServerLib STATIC
     Character.cpp
-    GameServer.cpp
     GameSession.cpp
     PacketHandler.cpp
     Actor.cpp
@@ -30,14 +29,23 @@ add_executable(GameServer
     ${COMMON_SOURCES}
 )
 
-target_include_directories(GameServer PRIVATE
+target_include_directories(gameServerLib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROTO_DIR}
 )
 
-target_link_libraries(GameServer PRIVATE
+target_link_libraries(gameServerLib PUBLIC
     serverCore
     protobuf::libprotobuf
+)
+
+# --- 서버 실행 파일 ---
+add_executable(GameServer
+    GameServer.cpp
+)
+
+target_link_libraries(GameServer PRIVATE
+    gameServerLib
 )
 
 # --- 더미 클라이언트 실행 파일 ---

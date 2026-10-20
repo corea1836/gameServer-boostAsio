@@ -124,7 +124,7 @@ void Session::OnRecv(int32 recvSize)
         return;
     }
 
-    if (!ParsePackets(_recvBuffer, [this](byte *p, int32 n) { OnRead(p, n); }))
+    if (!ParsePackets(_recvBuffer, [this](byte *p, int32 n) { return OnRead(p, n); }))
     {
         Disconnect();
         return;

@@ -5,10 +5,12 @@
 #include "World.h"
 
 // Network
-void GameSession::OnRead(byte *readPos, int32 readSize)
+bool GameSession::OnRead(byte *readPos, int32 readSize)
 {
     GameSessionRef session = GetGameSession();
-    PacketHandler::HandlePacket(session, readPos, readSize);
+    bool handleResult = PacketHandler::HandlePacket(session, readPos, readSize);
+
+    return handleResult;
 }
 
 void GameSession::OnConnected() {}
