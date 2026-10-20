@@ -5,24 +5,23 @@
 #include "SessionContainer.h"
 #include "ThreadPool.h"
 
-void CoreManager::Init(uint16 port,
-                       std::function<SessionRef(void)> sessionCreateFunc)
+void CoreManager::Init()
 {
-    if (port == 0)
-    {
-        throw std::invalid_argument("INVALID_PORT");
-    }
-    _port = port;
     _threadPool = std::make_unique<ThreadPool>();
     _ioContext = std::make_unique<IoContext>();
     _sessionContainer = std::make_unique<SessionContainer>();
-    _acceptor = std::make_unique<Acceptor>(
-        port, _ioContext->GetNetworkIoContext(), sessionCreateFunc);
 
     _ready.store(true);
 }
 
-void CoreManager::Start() { _acceptor->Start(); }
+void CoreManager::Start(uint16 port, std::function<SessionRef()> sessionCreateFunc)
+{
+    if (port == 0)
+        throw std::invalid_argument("Invalid port number");
+    _acceptor = std::make_unique<Acceptor>
+    (port, _ioContext->GetNetworkIoContext(), sessionCreateFunc);
+    _acceptor->Start();
+}
 
 ThreadPool &CoreManager::GetThreadPool()
 {
@@ -38,7 +37,7 @@ IoContext &CoreManager::GetIoContext()
 
 SessionContainer &CoreManager::GetSessionContainer()
 {
-    ASSERT_CRASH(_ready && _acceptor);
+    ASSERT_CRASH(_ready && _sessionContainer);
     return *_sessionContainer;
 }
 

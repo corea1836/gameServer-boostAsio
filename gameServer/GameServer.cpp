@@ -10,10 +10,10 @@
 int main()
 {
     PacketHandler::Init();
-    CoreManager::Instance().Init(
+    CoreManager::Instance().Init();
+    CoreManager::Instance().Start(
         7777, []() -> SessionRef
         { return GSessionContainer.CreateSession<GameSession>(); });
-    CoreManager::Instance().Start();
     GameManager::Instance();
 
     GGameLoop.CreateWorld();

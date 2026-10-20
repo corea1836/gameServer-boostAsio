@@ -18,9 +18,8 @@ class CoreManager
             static CoreManager instance;
             return instance;
         }
-        void Init(uint16 port,
-                  std::function<SessionRef(void)> sessionCreateFunc);
-        void Start();
+        void Init();
+        void Start(uint16 port, std::function<SessionRef()> sessionCreateFunc);
 
         ThreadPool &GetThreadPool();
         IoContext &GetIoContext();
@@ -33,7 +32,6 @@ class CoreManager
         CoreManager(const CoreManager &) = delete;
         CoreManager &operator=(const CoreManager &) = delete;
 
-        uint16 _port = 0;
         std::atomic<bool> _ready = false;
 
         ThreadPoolUniqueRef _threadPool;
