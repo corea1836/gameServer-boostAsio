@@ -6,10 +6,11 @@
 #include "SendBuffer.h"
 #include <iostream>
 #include <ostream>
+#include <boost/asio/strand.hpp>
 
 Session::Session(int64 id)
     : _id(id),
-      _socket(GIoContext.GetNetworkIoContext()),
+      _socket(boost::asio::make_strand(GIoContext.GetNetworkIoContext())),
       _recvBuffer(RecvBuffer(65535))
 {
 }
@@ -18,10 +19,14 @@ Session::~Session() {}
 
 bool Session::Connect()
 {
-    _isConnected.store(true);
-    GSessionContainer.AddSession(GetSession());
-    OnConnected();
-    Recv();
+    boost::asio::post(_socket.get_executor(), [this, session = GetSession()]()
+    {
+        _isConnected.store(true);
+        GSessionContainer.AddSession(session);
+        OnConnected();
+        Recv();
+    });
+
     return true;
 }
 
@@ -30,24 +35,22 @@ void Session::Disconnect()
     if (_isConnected.exchange(false) == false)
         return;
 
+    boost::asio::post(_socket.get_executor(), [session = GetSession()]()
+    {
+        session->DoDisconnect();
+    });
+}
+
+void Session::DoDisconnect()
+{
     boost_error_code ec;
 
     if (_socket.is_open())
-    {
         _socket.close(ec);
-
-        if (ec)
-        {
-            std::cout << "Disconnect Fail " << _id << " " << ec.message()
-                      << std::endl;
-        }
-    }
 
     GSessionContainer.RemoveSession(GetId());
 
     OnDisconnected();
-
-    std::cout << "Disconnect Success " << _id << std::endl;
 }
 
 void Session::HandleError(boost_error_code errorCode)
@@ -57,7 +60,6 @@ void Session::HandleError(boost_error_code errorCode)
     case 0:
         break;
     case boost::asio::error::operation_aborted:
-        std::cout << "Session Aborted. Disconnect In Progress." << std::endl;
         break;
     default:
         Disconnect();
@@ -114,7 +116,11 @@ void Session::Send(SendBufferRef sendBuffer)
 
     if (canStartWrite)
     {
-        Write();
+        boost::asio::post(_socket.get_executor(), [session = GetSession(), now = std::chrono::steady_clock::now()]()
+        {
+            Metrics::RecordStrandWait(std::chrono::steady_clock::now() - now);
+            session->Write();
+        });
     }
 }
 
@@ -210,3 +216,5 @@ void Session::Write()
             }
         });
 }
+
+
