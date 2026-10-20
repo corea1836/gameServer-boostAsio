@@ -95,7 +95,14 @@ void World::MulticastMove(int64 now)
 
         SendBufferRef buffer = PacketHandler::MakeSendBuffer(pkt, PKT_S_Move);
         for (auto [k, other] : _players)
-            other->GetSession()->Send(buffer);
+        {
+            GameSessionRef otherSession = other->GetSession();
+            if (otherSession == nullptr)
+                continue;
+
+            otherSession->Send(buffer);
+        }
+
 
         playerMove.lastMulticastMoving = playerMove.GetNeedMove();
     }
@@ -157,10 +164,10 @@ void World::EnterPlayer(PlayerRef player)
 
         for (auto &[key, otherPlayer] : _players)
         {
-            if (otherPlayer->GetActorInfo().actorId ==
-                player->GetActorInfo().actorId)
+            GameSessionRef otherSession = otherPlayer->GetSession();
+            if (otherSession == nullptr || otherPlayer->GetActorInfo().actorId == player->GetActorInfo().actorId)
                 continue;
-            otherPlayer->GetSession()->Send(sendBuffer);
+            otherSession->Send(sendBuffer);
         }
     }
 }
@@ -181,17 +188,17 @@ void World::LeavePlayer_Internal(int64 playerId)
     if (player == nullptr)
         return;
 
+    GameSessionRef session = player->GetSession();
+
     player->LeaveWorld();
     _players.erase(playerId);
-
-    GameSessionRef session = player->GetSession();
 
     if (session != nullptr)
     {
         Protocol::S_LeaveWorld pkt;
         SendBufferRef sendBuffer =
             PacketHandler::MakeSendBuffer(pkt, PKT_S_LeaveWorld);
-        player->GetSession()->Send(sendBuffer);
+        session->Send(sendBuffer);
     }
 
     {
@@ -202,7 +209,10 @@ void World::LeavePlayer_Internal(int64 playerId)
 
         for (auto &[key, otherPlayer] : _players)
         {
-            otherPlayer->GetSession()->Send(sendBuffer);
+            GameSessionRef otherSession = otherPlayer->GetSession();
+            if (otherSession == nullptr)
+                continue;
+            otherSession->Send(sendBuffer);
         }
     }
 }
