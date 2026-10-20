@@ -1,117 +1,100 @@
-// DummyClient.cpp
+// 부하 테스트 봇(1-9).
+// 사용법: DummyClient [봇 수=200] [실행 초=0(끝없이)] [host=127.0.0.1] [port=7777]
+// 실행 초를 주면 끝날 때 모든 봇이 S_EnterWorld를 받았는지에 따라 종료 코드 0/1을 돌려준다
 
-#include "ClientPacketHandler.h" // PacketHandler.h → ClientPacketHandler.h
-#include "ClientSession.h"
-#include "PacketHandler.h"
-#include "protobuf/Protocol.pb.h"
-#include <boost/asio.hpp>
-#include <iostream>
-#include <memory>
-#include <string>
+#include "BotPacketHandler.h"
+#include "BotSession.h"
+#include "CoreManager.h"
+#include "IoContext.h"
+#include "ThreadPool.h"
+#include <cstdio>
+#include <cstdlib>
 
-using boost::asio::ip::tcp;
-using namespace std;
-
-class DummyClient : public enable_shared_from_this<DummyClient>
+namespace
 {
-    public:
-        DummyClient(boost::asio::io_context &io_context, const string &host,
-                    const string &port, int id)
-            : _socket(io_context),
-              _resolver(io_context),
-              _timer(io_context),
-              _host(host),
-              _port(port),
-              _id(id),
-              _msgCount(0)
+
+constexpr int32 THREAD_COUNT = 4;
+constexpr int64 STATUS_INTERVAL_MS = 5000;
+
+void PrintStatus(int32 botCount)
+{
+    std::printf("[Bot] connected=%d/%d entered=%d disconnected=%d\n",
+                BotStats::SConnected.load(), botCount, BotStats::SEntered.load(),
+                BotStats::SDisconnected.load());
+    std::fflush(stdout);
+}
+
+void AsyncWaitStatus(std::shared_ptr<boost_timer> timer, int32 botCount)
+{
+    timer->expires_after(std::chrono::milliseconds(STATUS_INTERVAL_MS));
+    timer->async_wait(
+        [timer, botCount](boost_error_code errorCode)
         {
-        }
+            if (errorCode)
+                return;
 
-        void Start()
-        {
-            cout << "=== [DummyClient " << _id
-                 << "] Start() 호출됨 ===" << endl;
-            DoConnect();
-        }
+            PrintStatus(botCount);
+            AsyncWaitStatus(timer, botCount);
+        });
+}
 
-    private:
-        tcp::socket _socket;
-        tcp::resolver _resolver;
-        boost::asio::steady_timer _timer;
-        string _host;
-        string _port;
-        int _id;
-        int _msgCount;
-        shared_ptr<ClientSession> _session;
+} // namespace
 
-        void DoConnect()
-        {
-            cout << "=== [DummyClient " << _id
-                 << "] DoConnect() 시작 ===" << endl;
+int main(int argc, char *argv[])
+{
+    int32 botCount = argc > 1 ? std::atoi(argv[1]) : 200;
+    int32 durationSec = argc > 2 ? std::atoi(argv[2]) : 0;
+    const char *host = argc > 3 ? argv[3] : "127.0.0.1";
+    uint16 port = argc > 4 ? static_cast<uint16>(std::atoi(argv[4])) : 7777;
 
-            auto self(shared_from_this());
-            auto endPoints = _resolver.resolve(_host, _port);
+    BotPacketHandler::Init();
+    CoreManager::Instance().Init();
+    boost_io_context &ioContext = GIoContext.GetNetworkIoContext();
 
-            boost::asio::async_connect(
-                _socket, endPoints,
-                [this, self](boost::system::error_code ec, tcp::endpoint)
+    boost_tcp::endpoint endpoint(boost::asio::ip::make_address(host), port);
+
+    for (int32 i = 0; i < botCount; i++)
+    {
+        auto session = GSessionContainer.CreateSession<BotSession>();
+        session->GetSocket().async_connect(
+            endpoint,
+            [session](boost_error_code errorCode)
+            {
+                if (errorCode)
                 {
-                    cout << "=== [DummyClient " << _id
-                         << "] async_connect 콜백 실행 ===" << endl;
+                    std::printf("[Bot] connect fail %lld: %s\n",
+                                static_cast<long long>(session->GetId()),
+                                errorCode.message().c_str());
+                    return;
+                }
 
-                    if (!ec)
-                    {
-                        cout << "[Client " << _id << "] 서버 연결 성공\n";
-
-                        // 세션 생성 및 수신 시작
-                        _session =
-                            make_shared<ClientSession>(std::move(_socket), _id);
-                        _session->Start();
-
-                        Protocol::C_EnterWorld pkt;
-                        _session->Send(PacketHandler::MakeSendBuffer(
-                            pkt, PKT_C_EnterWorld));
-
-                        // ❌ 직접 패킷 전송 안 함.
-                        //    서버가 S_Connected 를 먼저 보내고,
-                        //    Handle_S_Connected 가 C_EnterGame 을 전송함.
-                    }
-                    else
-                    {
-                        cout << "[Client " << _id
-                             << "] Connect Error: " << ec.message() << endl;
-                    }
-                });
-        }
-};
-
-int main()
-{
-    try
-    {
-        cout << "=== main() 시작 ===" << endl;
-
-        ClientPacketHandler::Init(); // ✅ 디스패치 테이블 초기화 (필수)
-
-        boost::asio::io_context io_context;
-
-        auto client1 =
-            make_shared<DummyClient>(io_context, "127.0.0.1", "7777", 1);
-
-        cout << "=== client1->Start() 호출 전 ===" << endl;
-        client1->Start();
-        cout << "=== client1->Start() 호출 후 ===" << endl;
-
-        cout << "클라이언트 실행 중...\n";
-
-        io_context.run();
-
-        cout << "=== io_context.run() 종료 ===" << endl;
-    }
-    catch (exception &e)
-    {
-        cerr << "Exception: " << e.what() << endl;
+                session->Connect();
+            });
     }
 
-    return 0;
+    auto statusTimer = std::make_shared<boost_timer>(ioContext);
+    AsyncWaitStatus(statusTimer, botCount);
+
+    boost_timer stopTimer(ioContext);
+    if (durationSec > 0)
+    {
+        stopTimer.expires_after(std::chrono::seconds(durationSec));
+        stopTimer.async_wait(
+            [](boost_error_code errorCode)
+            {
+                if (errorCode)
+                    return;
+
+                GIoContext.Stop();
+            });
+    }
+
+    for (int32 i = 0; i < THREAD_COUNT; i++)
+        GThreadPool.Launch([&ioContext]() { ioContext.run(); });
+
+    GThreadPool.Join();
+
+    PrintStatus(botCount);
+    // 소멸 순서(세션 ↔ 멈춘 io_context)를 따지지 않도록 정리 없이 바로 끝낸다
+    std::_Exit(BotStats::SEntered.load() == botCount ? 0 : 1);
 }

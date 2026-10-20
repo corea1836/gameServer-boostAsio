@@ -21,9 +21,10 @@ T1/                                  # 이 저장소 (C++ 서버)
 │   ├── World                        # 존 1개 = JobSerializer 1개 + 틱
 │   ├── Actor, Character, Player     # 액터 계층
 │   ├── MapComponent                 # 충돌 그리드 (아직 CMake 미등록, M0-a)
-│   ├── DummyClient, ClientSession, ClientPacketHandler   # 구형 더미 클라 (1-9에서 BotSession으로 대체)
+│   ├── DummyClient, BotSession, BotPacketHandler   # 부하 테스트 봇 (1-9)
 │   └── protobuf/                    # 생성된 *.pb.cc / *.pb.h (원본 .proto는 Unity 쪽)
 ├── tests/                           # GoogleTest 타깃 T1Tests
+├── scripts/loadtest.sh              # 부하 측정 (Release 서버 + 봇, 1-11)
 ├── docs/                            # 하네스 문서 (PRD, ARCHITECTURE, ADR)
 │   └── research/                    # 참고 자료 (조사 결과 등)
 └── .claude/                         # 하네스 명령(/harness, /review)과 hook 설정

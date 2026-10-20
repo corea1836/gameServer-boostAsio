@@ -48,11 +48,11 @@ target_link_libraries(GameServer PRIVATE
     gameServerLib
 )
 
-# --- 더미 클라이언트 실행 파일 ---
+# --- 부하 테스트 봇 실행 파일 (1-9) ---
 add_executable(DummyClient
     DummyClient.cpp
-    ClientSession.cpp
-    ClientPacketHandler.cpp
+    BotSession.cpp
+    BotPacketHandler.cpp
     ${COMMON_SOURCES}
 )
 

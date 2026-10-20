@@ -73,8 +73,8 @@ float 좌표 기반 액션 MMORPG 서버를 C++17 + Boost.Asio로 직접 만들�
 ## 현재 작업 목록 (R1 + R2 0~2단계 + 맵 트랙)
 
 ### 작업 분담
-- **사용자 (학습 대상)**: 프레이밍 수정, 핸들러 방어(테스트 포함), close 경쟁, 데이터 레이스, JobSerializer 수정, 고정 틱, DummyClient 봇, 이동 0~2단계(서버 + 클라)
-- **Claude (인프라)**: 테스트/TSan 빌드, 서버 지표, strand 벤치, 클라 지연 시뮬레이터, CC0 에셋 후보 조사, 충돌 굽기 툴, 맵 확장 스크립트
+- **사용자 (학습 대상)**: 프레이밍 수정, 핸들러 방어(테스트 포함), close 경쟁, 데이터 레이스, JobSerializer 수정, 고정 틱, 이동 0~2단계(서버 + 클라)
+- **Claude (인프라)**: 테스트/TSan 빌드, 서버 지표, DummyClient 봇과 부하 측정 스크립트(2026-10-20 사용자 요청으로 이관), strand 벤치, 클라 지연 시뮬레이터, CC0 에셋 후보 조사, 충돌 굽기 툴, 맵 확장 스크립트
 - **사용자 (맵)**: 에셋 최종 선택
 - **사용자 파트 진행 방식**: Claude가 과제를 설명하고, 규칙 로직이면 **실패하는 테스트를 먼저** 쓴다 → 사용자가 구현한다 → Claude가 리뷰한다. 담당이 "사용자 (테스트 포함)"이면 Claude는 테스트 케이스 목록만 주고 테스트도 사용자가 쓴다. 감각·튜닝, 동시성, 실험 작업의 검증 방식은 ADR-016을 따른다.
 
@@ -90,7 +90,7 @@ float 좌표 기반 액션 MMORPG 서버를 C++17 + Boost.Asio로 직접 만들�
 | 1-6 | Claude 테스트 → 사용자 | 완료 | **JobSerializer.** 시간 예산을 잡 단위로 확인(값은 1-11에서 틱 간격과 함께 정하고 그때까지 64ms, ADR-004), 배치 vector 재사용(`serverCore/JobSerializer.cpp:38,58-61`). 템플릿 `PostAfter` 정리는 1-7로 옮겼다. 테스트에서 io_context를 넣을 수 있도록 생성자가 io_context를 받는다 | `tests/JobSerializerTest.cpp`: 단일 스레드에서 A(1ms 잡 100개)와 B(잡 1개)를 넣으면 B가 A의 잡 "예산(ms) + 2"개 이내에 실행된다(예산 값 자체는 assert하지 않는다). 양보 후에도 잡 순서가 유지되고 빠지는 잡이 없다 |
 | 1-7 | Claude 테스트 → 사용자 | 완료 | **고정 틱.** 존마다 `steady_timer` + `expires_at` 절대 데드라인, dt=0.05 고정, 생성 직후부터 시작. 데드라인을 넘기면 건너뛰고 횟수를 센다. 틱 스케줄링은 `serverCore/FixedTicker`(잡 큐, 간격, 콜백을 받는다)로 분리해 소켓·World 없이 테스트하고, World가 하나씩 가진다. 틱 콜백은 존의 JobSerializer 위에서 실행한다(game 스레드가 여러 개다). `_isTickRunning`/`StartTick`/`_lastTickTime` 정리(`gameServer/World.cpp:25-47`). 틱이 `steady_timer`로 바뀌면 `PostAfter`를 쓰는 곳을 확인하고, 호출되면 컴파일되지 않는 템플릿 `PostAfter`(`serverCore/JobSerializer.h`)와 함께 정리한다 | `tests/FixedTickerTest.cpp`: 1초에 20±1틱, 틱마다 10ms 일을 해도 20±1틱(절대 데드라인), 한 틱을 120ms 지연시키면 miss 2회이고 틱 사이 간격이 25ms 이상(몰아서 실행하지 않는다) |
 | 1-8 | Claude | 완료 | **서버 지표.** 존별 틱 p50/p99, 데드라인 초과, 잡 대기시간, 세션별 송수신 바이트, CPU를 5초마다 로그로 남긴다 | 봇 50 실행 시 지표가 로그에 찍힌다 |
-| 1-9 | 사용자 | | **DummyClient 봇.** serverCore `Session`을 상속한 BotSession. FindMyPlayers → EnterWorld(0) → 0.5~2초마다 8방향 랜덤 이동/정지. 멀티스레드 io_context | 봇 200이 모두 `S_EnterWorld`를 받고, 서버 크래시 없음 |
+| 1-9 | Claude (2026-10-20 사용자 요청으로 변경) | | **DummyClient 봇.** serverCore `Session`을 상속한 BotSession. 봇도 `CoreManager::Init()`(포트 없이)을 쓰도록 사용자가 `Init`/`Start`를 나눴다. FindMyPlayers → EnterWorld(0) → 0.5~2초마다 8방향 랜덤 이동/정지. 멀티스레드 io_context | 봇 200이 모두 `S_EnterWorld`를 받고, 서버 크래시 없음 |
 | 1-10 | Claude | | **`JobBench`.** JobSerializer(64ms), JobSerializer(5ms), strand를 비교한다. 처리량, 대기시간 p50/p99, 무거운 큐가 밀려 있을 때 가벼운 큐의 대기시간을 잰다 | `docs/measurements.md`에 결과 표 기록 |
 | 1-11 | 함께 | | **AOI 이전 기준선.** 존 하나에 봇 50/100/200을 넣고 틱 시간, 클라당 바이트, CPU를 잰다. 시간 예산 1/5/10/64ms도 비교한다 | N² 곡선과 예산 비교 표 기록 |
 

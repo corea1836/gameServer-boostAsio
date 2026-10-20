@@ -27,3 +27,5 @@ cmake -S . -B build && cmake --build build                    # 빌드
 ctest --test-dir build --output-on-failure                     # 테스트
 cmake -S . -B build/tsan -DT1_SANITIZE=thread && cmake --build build/tsan   # TSan 빌드
 ./build/gameServer/GameServer                                  # 서버 실행 (포트 7777)
+./build/gameServer/DummyClient [봇 수] [실행 초]                # 부하 테스트 봇 (기본 200, 끝없이)
+scripts/loadtest.sh [봇 수 ...]                                # 부하 측정 (Release, 기본 50 100 200) → docs/measurements.md
