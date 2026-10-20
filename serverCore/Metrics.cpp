@@ -5,11 +5,15 @@
 #include <cmath>
 #include <cstdio>
 #include <iomanip>
+#include <mutex>
 #include <sstream>
 #include <sys/resource.h>
 
 namespace
 {
+
+std::mutex GStrandWaitLock;
+std::vector<int64> GStrandWaitUs;
 
 int64 ToUs(std::chrono::steady_clock::duration duration)
 {
@@ -44,6 +48,21 @@ std::string FormatPercentiles(std::vector<int64> &samples)
 }
 
 } // namespace
+
+void Metrics::RecordStrandWait(std::chrono::steady_clock::duration wait)
+{
+    std::lock_guard<std::mutex> guard(GStrandWaitLock);
+    if (GStrandWaitUs.size() < MAX_STRAND_WAIT_SAMPLES)
+        GStrandWaitUs.push_back(ToUs(wait));
+}
+
+std::vector<int64> Metrics::TakeStrandWaitSamplesUs()
+{
+    std::vector<int64> samples;
+    std::lock_guard<std::mutex> guard(GStrandWaitLock);
+    samples.swap(GStrandWaitUs);
+    return samples;
+}
 
 int64 Metrics::Percentile(std::vector<int64> &samples, double p)
 {
@@ -135,6 +154,9 @@ void MetricsReporter::Report()
     // CPU 100% = 코어 하나를 다 쓴 것. 스레드가 여럿이라 100%를 넘을 수 있다
     double cpuPercent = (cpuUs - _lastCpuUs) / 10'000.0 / seconds;
 
+    // 샘플 수가 MAX_STRAND_WAIT_SAMPLES와 같으면 그 뒤 쓰기는 샘플에서 빠졌다
+    std::vector<int64> strandWaitUs = Metrics::TakeStrandWaitSamplesUs();
+
     std::ostringstream line;
     line << std::fixed << std::setprecision(1) << "[Metrics] sessions=" << sessionCount
          << " send_Bps=" << sentPerSec << " recv_Bps=" << recvPerSec
@@ -142,6 +164,8 @@ void MetricsReporter::Report()
          << " recv_Bps_per_session=" << recvPerSession
          << " send_pkts_per_sec=" << (sendPackets - _lastSendPackets) / seconds
          << " writes_per_sec=" << (writes - _lastWrites) / seconds
+         << " strand_waits=" << strandWaitUs.size()
+         << " strand_wait_us(p50/p99/max)=" << FormatPercentiles(strandWaitUs)
          << " cpu=" << cpuPercent << '%';
     PrintLine(line.str());
 

@@ -22,6 +22,12 @@ class Metrics
         static inline std::atomic<int64> SSendPackets = 0;
         static inline std::atomic<int64> SWrites = 0;
 
+        // 1-4 세션 strand: Write를 post한 뒤 strand에서 실행되기까지 걸린 시간.
+        // 여러 network 스레드가 넣는다. 구간마다 MAX_STRAND_WAIT_SAMPLES개까지만 모은다
+        static constexpr size_t MAX_STRAND_WAIT_SAMPLES = 65536;
+        static void RecordStrandWait(std::chrono::steady_clock::duration wait);
+        static std::vector<int64> TakeStrandWaitSamplesUs();
+
         // nearest-rank 백분위(p는 0~100). samples의 순서를 바꾼다. 비어 있으면 0
         static int64 Percentile(std::vector<int64> &samples, double p);
 };

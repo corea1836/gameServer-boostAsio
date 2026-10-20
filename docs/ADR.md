@@ -59,10 +59,26 @@
 - Nagle 알고리즘: 작은 패킷을 붙잡아 delayed ACK와 겹치면 수십 ms 지연이 낄 수 있다. 지금은 서버·클라 모두 `TCP_NODELAY`를 설정하지 않았다. M1-c에서 켬/끔을 비교 측정한다.
 
 ### ADR-008: 세션 close 경쟁 해결 방식
-**상태**: 미결 (1-4를 시작할 때 결정)
-**결정**: 다음 둘 중 하나. (a) 세션 strand: 쓰기 시작, 완료 핸들러, close를 모두 strand 위에서 실행한다. 비용은 쓰기 배치당 post 1번. (b) shutdown은 즉시 하고, close는 마지막 참조가 사라지는 소멸자에서 한다.
-**이유**: 지금 코드는 쓰기를 `_isWriting`으로 한 명만 시작하고, push와 `_isWriting=false`를 같은 `_lock` 안에서 처리해 lost wakeup을 막고, 읽기는 한 번에 하나만 걸고, close는 `_isConnected.exchange`로 한 번만 일어난다. 하지만 close가 다른 스레드의 `async_write`/`async_read_some` 시작과 겹칠 수 있다(UB). 최악에는 닫힌 fd 번호가 재사용돼서 다른 유저 소켓으로 데이터가 갈 수 있다(이론상).
-**트레이드오프**: (a)는 post 비용이 늘고, (b)는 참조가 남아 있는 동안 소켓 자원이 늦게 풀린다.
+**상태**: 확정 (2026-10-20, 1-4 시작 시 grilling)
+**결정**: (a) 세션 strand.
+- 소켓을 세션마다 `make_strand(network io_context)`로 만든 strand를 executor로 삼아 만든다. 핸들러에 executor를 따로 붙이지 않으면 asio는 소켓의 executor에서 완료 핸들러를 실행하므로, 읽기·쓰기 완료 핸들러(`async_write` 안쪽의 후속 `async_write_some` 포함)가 전부 strand에서 돈다.
+- 소켓과 쓰기 상태(`_writeQueue`, `_inflightBuffer`)는 strand 위에서만 만진다. strand는 완료 핸들러의 실행 위치만 정하고, `async_*` 시작은 부른 스레드에서 일어나므로 strand 밖 진입점은 post로 넘긴다.
+  - `Connect`: 본문을 post한다(서버의 accept 핸들러는 acceptor의 executor에서 돈다).
+  - `Send`: push는 지금처럼 mutex 큐에 하고, `_isWriting`을 처음 세운 쪽만 `Write`를 post한다(쓰기 배치당 post 1번). `_isWriting`의 의미는 "쓰기 중"에서 "쓰기가 예약됐거나 진행 중"으로 바뀐다.
+  - `Disconnect`: `_isConnected.exchange`는 부른 자리에서 하고, close·`RemoveSession`·`OnDisconnected`는 strand에서 한다.
+- 전부 dispatch가 아니라 post로 넘긴다. dispatch는 이미 strand 위면 그 자리에서 실행되어, 패킷 핸들러 안에서 끊으면 파싱 도중에 close와 `OnDisconnected`가 끼어든다.
+
+**이유**:
+- 소켓의 소유자를 하나로 만든다. "존 상태는 그 존의 JobSerializer만 만진다"와 같은 원칙이다.
+- (b)는 `shutdown`도 다른 스레드의 쓰기 시작과 겹친다. 지금 asio 구현에서 shutdown은 fd 시스템 콜만 해서 실제로는 문제가 없지만, asio 문서상 같은 소켓 객체를 여러 스레드가 동시에 쓰는 것은 unsafe라 안전 근거가 구현 세부가 된다. 참조가 새면 fd도 샌다.
+- mutex로 소켓 조작을 감싸는 방법은 막지 못한다. `async_write`는 composed operation이라 두 번째 이후 `async_write_some`은 asio가 완료 쪽(network 스레드)에서 부르고, speculative write 때문에 mutex를 쥔 채 `sendmsg`를 하게 된다.
+- 읽기도 같은 strand에 둔다. close가 strand 위에 있으면 읽기 시작(`Recv()`)도 strand 위여야 겹치지 않는다. 바이트 순서는 strand가 아니라 "읽기는 한 번에 하나만 건다"는 규칙이 보장한다.
+- 부수 효과: 패킷 핸들러(`OnRead`)와 `OnDisconnected`가 같은 strand에서 돌아 둘 사이의 `GameSession` 필드 경쟁이 사라진다. game 스레드에서 읽는 곳(`World.cpp:136`의 `GetSelectedPlayer()`)은 1-5에 남는다.
+
+**트레이드오프**:
+- 쓰기 배치당 post 1번(network 스레드 깨우기)이 는다. 대신 `sendmsg`가 game 스레드에서 network 스레드로 옮겨 간다(봇 100 기준 `World::Tick` 샘플의 54%). 틱이 줄어드는지는 가설이고, 1-4 전후로 잰다.
+- 같은 세션의 읽기·쓰기 핸들러가 동시에 돌지 않아서, 쓰기가 읽기 핸들러 뒤에 줄을 설 수 있다. strand 위 핸들러는 짧아야 한다(파싱과 post만. DB 동기 호출 금지, R9). 대기시간은 strand 대기 지표로 잰다.
+- strand가 모아 보내기를 만들지는 않는다. post와 `Write` 실행 사이에 우연히 쌓이는 만큼만 묶인다. 의도적으로 모으는 방법(틱 끝 flush)은 1-4 측정 뒤 따로 정한다.
 
 ### ADR-009: 핫 존은 인원 상한 + 채널
 **상태**: 확정

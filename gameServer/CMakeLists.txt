@@ -65,3 +65,19 @@ target_link_libraries(DummyClient PRIVATE
     serverCore
     protobuf::libprotobuf
 )
+
+# --- 접속/종료 반복 봇 (1-4 세션 close 경쟁 검증) ---
+add_executable(ChurnClient
+    ChurnClient.cpp
+    ${COMMON_SOURCES}
+)
+
+target_include_directories(ChurnClient PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PROTO_DIR}
+)
+
+target_link_libraries(ChurnClient PRIVATE
+    serverCore
+    protobuf::libprotobuf
+)

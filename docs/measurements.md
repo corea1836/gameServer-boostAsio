@@ -35,3 +35,41 @@
 
 **아직 하지 않은 것**
 - 시간 예산 1/5/10/64ms 비교(1-11)
+
+## 1-4 세션 strand 전후
+
+**환경**: 1-11과 같다(Apple M4 Pro, Release, 서버 network 스레드 5 + game 스레드 5, 존 1개, 틱 50ms, 시간 예산 64ms, 봇 스레드 4).
+- 부하: `scripts/loadtest.sh` (봇 수마다 30초. 첫 5초 구간을 빼고 나머지 5구간의 범위)
+- 경쟁: `scripts/churntest.sh` (TSan 서버 90초, 움직이는 봇 50(DummyClient) + 접속/종료 반복 봇 50(ChurnClient). 반복 봇은 입장한 뒤 봇이 닫기, 잘못된 패킷 보내기, 읽기 멈추기(송신 큐 오버플로)로 3분의 1씩 끊는다)
+
+### 전 (2026-10-20, `4999414`)
+
+**부하**
+
+| 봇 | 틱 p50 (ms) | 틱 p99 (ms) | 데드라인 초과 (5초당) | 송신 패킷 (초당) | async_write (초당) | 쓰기 1번당 패킷 | 세션당 송신 (KB/s) | 서버 CPU |
+|---|---|---|---|---|---|---|---|---|
+| 50 | 14.8~15.9 | 16.5~17.0 | 0 | 43.8k~46.2k | 43.8k~46.2k | 1.00~1.01 | 38.0~40.5 | 65~74% |
+| 100 | 53.1~55.8 | 55.9~62.1 | 49~50 | 88.9k~93.6k | 88.9k~91.1k | 1.00~1.05 | 38.6~40.6 | 126~132% |
+| 200 | 220~226 | 227~239 | 80~84 | 144.3k~149.1k | 144.3k~149.1k | 1.00~1.01 | 31.3~32.4 | 206~214% |
+
+- 1-11 1차와 코드는 null 체크만 다른데, 봇 50의 틱 p50이 약 1ms, CPU가 약 8%p 높게 나왔다. 그래서 1-11 1차가 아니라 이 표를 "전"으로 쓴다.
+- strand 대기시간은 strand가 없어서 비어 있다.
+
+**TSan + 반복 봇** (90초)
+- 반복 봇: 봇이 닫기 873회, 잘못된 패킷으로 서버가 끊기 861회, 오버플로로 서버가 끊기 32회(STALL 16자리 × 2회, 전부 끊김 확인)
+- TSan 경고 28건
+
+| 분류 | 건수 | 내용 |
+|---|---|---|
+| 소켓 close ↔ 쓰기 시작 | 9 | network 스레드의 `Disconnect` → `close()`(`Session.cpp:37`, 읽기 에러·핸들러 false에서)와 game 스레드의 `World::MulticastMove` → `Send` → `Write` → `async_write` 시작(`Session.cpp:169`). asio 쪽 위치는 `async_send`, `cleanup_descriptor_data`, close 안의 `construct` |
+| `std::cout` | 18 | `Session.cpp:50`(Disconnect), `:60`(HandleError)의 로그를 여러 스레드가 동시에 쓴다(libc++ `ios_base::width`) |
+| asio reactor 내부 | 1 | `kqueue_reactor::run`이 descriptor_state의 mutex를 읽는 것과, accept가 새 소켓의 descriptor_state를 만드는 것. 포인터가 커널(kevent)을 거쳐 넘어가서 TSan이 순서를 보지 못하는 것일 수 있다(추정. strand 적용 뒤에도 남는지 본다) |
+
+**크래시** (봇을 다듬으며 TSan 서버로 3번, Release 서버로 1번 돌렸다)
+- TSan 60초 1번: game 스레드의 쓰기 시작이 `kqueue_reactor::start_op`에서 SEGV. 바로 앞 경고가 같은 descriptor_state를 network 스레드의 close(`cleanup_descriptor_data`)가 해제한 것이다. 1-4가 고칠 크래시다.
+- TSan 90초 1번: 봇이 입장 중에 끊자 `GameSession::OnDisconnected`(`GameSession.cpp:23`)가 아직 없는 World에 `LeavePlayer`를 불러 시작 몇 초 만에 SEGV. 1-5의 "OnDisconnected에서 world가 null"이다. 이 때문에 반복 봇은 입장한 뒤에만 끊게 바꿨다.
+- TSan 90초(입장 뒤에만 끊기) 1번과 Release 90초(끊는 방법을 매번 무작위로 고르던 봇) 1번은 크래시 없이 끝났다. 1-4 크래시는 확률적이라 경고 수로 판정한다.
+
+### 후
+
+(1-4 구현 뒤 같은 명령으로 채운다. strand 대기시간은 `Metrics::RecordStrandWait`를 부른 뒤부터 나온다)

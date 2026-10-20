@@ -22,9 +22,11 @@ T1/                                  # 이 저장소 (C++ 서버)
 │   ├── Actor, Character, Player     # 액터 계층
 │   ├── MapComponent                 # 충돌 그리드 (아직 CMake 미등록, M0-a)
 │   ├── DummyClient, BotSession, BotPacketHandler   # 부하 테스트 봇 (1-9)
+│   ├── ChurnClient                  # 접속/종료 반복 봇 (1-4, Session 없이 소켓 직접)
 │   └── protobuf/                    # 생성된 *.pb.cc / *.pb.h (원본 .proto는 Unity 쪽)
 ├── tests/                           # GoogleTest 타깃 T1Tests
 ├── scripts/loadtest.sh              # 부하 측정 (Release 서버 + 봇, 1-11)
+├── scripts/churntest.sh             # 세션 close 경쟁 검증 (TSan 서버 + 움직이는 봇 + 반복 봇, 1-4)
 ├── docs/                            # 하네스 문서 (PRD, ARCHITECTURE, ADR)
 │   └── research/                    # 참고 자료 (조사 결과 등)
 └── .claude/                         # 하네스 명령(/harness, /review)과 hook 설정
