@@ -12,6 +12,7 @@ add_executable(T1Tests
     JobSerializerTest.cpp
     FixedTickerTest.cpp
     PacketHandlerTest.cpp
+    MetricsTest.cpp
 )
 
 target_link_libraries(T1Tests PRIVATE

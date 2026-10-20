@@ -3,6 +3,7 @@
 #include "GameManager.h"
 #include "GameSession.h"
 #include "IoContext.h"
+#include "Metrics.h"
 #include "PacketHandler.h"
 #include "ThreadPool.h"
 
@@ -16,6 +17,10 @@ int main()
     GameManager::Instance();
 
     GGameLoop.CreateWorld();
+
+    auto metricsReporter =
+        std::make_shared<MetricsReporter>(GIoContext.GetNetworkIoContext());
+    metricsReporter->Start();
 
     for (int i = 0; i < 5; i++)
     {

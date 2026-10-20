@@ -1,6 +1,7 @@
 #include "Session.h"
 #include "CoreManager.h"
 #include "IoContext.h"
+#include "Metrics.h"
 #include "PacketFraming.h"
 #include "SendBuffer.h"
 #include <iostream>
@@ -82,6 +83,7 @@ void Session::Recv()
 
 void Session::Send(SendBufferRef sendBuffer)
 {
+    Metrics::SSendPackets.fetch_add(1, std::memory_order_relaxed);
     bool canStartWrite = false;
     bool isOverflow = false;
 
@@ -123,6 +125,7 @@ void Session::OnRecv(int32 recvSize)
         Disconnect();
         return;
     }
+    Metrics::SRecvBytes.fetch_add(recvSize, std::memory_order_relaxed);
 
     if (!ParsePackets(_recvBuffer, [this](byte *p, int32 n) { return OnRead(p, n); }))
     {
@@ -173,6 +176,8 @@ void Session::Write()
                 session->HandleError(errorCode);
                 return;
             }
+            Metrics::SSentBytes.fetch_add(size, std::memory_order_relaxed);
+            Metrics::SWrites.fetch_add(1, std::memory_order_relaxed);
 
             while (inflightCount-- > 0)
             {

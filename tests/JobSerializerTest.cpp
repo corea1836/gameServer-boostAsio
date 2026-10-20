@@ -74,3 +74,21 @@ TEST(JobSerializer, YieldKeepsOrderAndLosesNoJob)
     std::iota(expected.begin(), expected.end(), 0);
     EXPECT_EQ(order, expected);
 }
+
+// 잡 대기시간(1-8 지표)은 Post부터 실행 시작까지다. 5ms 잡 뒤에 선 잡은 5ms 이상 기다린다.
+// 잡마다 샘플이 하나씩 쌓이고, 꺼내면 비워진다
+TEST(JobSerializer, RecordsWaitTimePerJob)
+{
+    boost_io_context ioContext;
+    auto jobs = std::make_shared<JobSerializer>(ioContext);
+
+    jobs->Post([]() { BusyWait(5); });
+    jobs->Post([]() {});
+
+    ioContext.run();
+
+    std::vector<int64> waitUs = jobs->TakeWaitSamplesUs();
+    ASSERT_EQ(waitUs.size(), 2u);
+    EXPECT_GE(waitUs[1], 5000);
+    EXPECT_TRUE(jobs->TakeWaitSamplesUs().empty());
+}

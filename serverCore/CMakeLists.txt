@@ -12,6 +12,7 @@ set(SERVERCORE_SOURCES
     FixedTicker.cpp
     IoContext.cpp
     JobSerializer.cpp
+    Metrics.cpp
     PacketFraming.cpp
     RecvBuffer.cpp
     Session.cpp
@@ -30,6 +31,7 @@ set(SERVERCORE_HEADERS
     IoContext.h
     Job.h
     JobSerializer.h
+    Metrics.h
     PacketFraming.h
     RecvBuffer.h
     SendBuffer.h

@@ -27,6 +27,13 @@ class SessionContainer
             return session != _sessions.end() ? session->second : nullptr;
         }
 
+        int32 GetSessionCount()
+        {
+            std::lock_guard<std::mutex> guard(_lock);
+
+            return static_cast<int32>(_sessions.size());
+        }
+
         void AddSession(SessionRef session);
         void RemoveSession(int64 sessionId);
 

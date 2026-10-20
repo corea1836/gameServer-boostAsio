@@ -11,6 +11,7 @@ T1/                                  # 이 저장소 (C++ 서버)
 │   ├── Session, SessionContainer    # TCP 세션, send queue, recv 프레이밍
 │   ├── RecvBuffer, SendBuffer, PacketHeader
 │   ├── JobSerializer, Job           # 직렬 실행 잡 큐 (존 로직용)
+│   ├── Metrics                      # 1-8 지표: 존 틱·잡 대기, 세션 바이트, CPU를 5초마다 로그
 │   └── CoreTLS, TimeUtils, Types
 ├── gameServer/                      # 게임 로직 + 실행 파일
 │   ├── GameServer.cpp               # main

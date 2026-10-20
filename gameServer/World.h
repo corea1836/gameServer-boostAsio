@@ -2,6 +2,7 @@
 
 #include "ActorFactory.h"
 #include "GameTypes.h"
+#include <Metrics.h>
 #include <unordered_map>
 
 class FixedTicker;
@@ -10,7 +11,7 @@ class World : public std::enable_shared_from_this<World>
 {
     public:
         static constexpr int64 TICK_INTERVAL_MS = 50;
-        World();
+        World(int64 worldId);
         ~World();
 
         void Init();
@@ -40,8 +41,10 @@ class World : public std::enable_shared_from_this<World>
         void LeavePlayer_Internal(int64 playerId);
         void HandleMove_Internal(PlayerRef player, MoveInfo nextMove);
 
+        int64 _worldId = 0;
         JobSerializerRef _jobs;
         std::shared_ptr<FixedTicker> _fixedTicker;
         std::unordered_map<int64, PlayerRef> _players;
         std::atomic<bool> _isClosed = false;
+        ZoneMetrics _metrics;
 };

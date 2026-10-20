@@ -61,6 +61,14 @@ void JobSerializer::Execute()
             const JobRef job = std::move(_executeJobs.front());
             _executeJobs.pop_front();
 
+            if (_waitSamplesUs.size() < MAX_WAIT_SAMPLES)
+            {
+                _waitSamplesUs.push_back(
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                        std::chrono::steady_clock::now() - job->GetPostTime())
+                        .count());
+            }
+
             job->Execute();
         }
     }

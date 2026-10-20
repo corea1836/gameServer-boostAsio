@@ -12,8 +12,11 @@
 #include "protobuf/Struct.pb.h"
 #include <JobSerializer.h>
 #include <algorithm>
+#include <chrono>
 
-World::World() {
+World::World(int64 worldId)
+    : _worldId(worldId)
+{
 }
 
 World::~World() {}
@@ -37,11 +40,15 @@ void World::Post(CallbackFunc &&callback) { _jobs->Post(std::move(callback)); }
 
 void World::Tick()
 {
+    auto tickStart = std::chrono::steady_clock::now();
     auto now = TimeUtils::GetTickCount64();
 
     UpdatePosition(TICK_INTERVAL_MS / 1000.f);
 
     MulticastMove(now);
+
+    _metrics.RecordTick(std::chrono::steady_clock::now() - tickStart);
+    _metrics.ReportIfDue(_worldId, _fixedTicker->GetMissCount(), *_jobs);
 }
 
 void World::UpdatePosition(float deltaTime)
