@@ -5,7 +5,7 @@
 #include <CoreMacro.h>
 #include <PacketHeader.h>
 #include <SendBuffer.h>
-//TODO: false 를 반환하면 연결을 끊는다. 아직 준비 안 된 패킷은 처리하지 않고 true 를 반환한다.
+// false 를 반환하면 연결을 끊는다. 아직 준비 안 된 패킷은 처리하지 않고 true 를 반환한다.
 using PacketHandlerFunc = std::function<bool(GameSessionRef &, byte *, int32)>;
 extern PacketHandlerFunc GPacketHandler[UINT16_MAX + 1];
 
