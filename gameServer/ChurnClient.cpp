@@ -2,7 +2,7 @@
 // 사용법: ChurnClient [동시 봇 수=50] [실행 초=0(끝없이)] [host=127.0.0.1] [port=7777]
 // 봇마다 접속 → C_FindMyPlayers + C_EnterWorld(0) → S_EnterWorld를 받으면 → 끊기 → 다시 접속을 반복한다.
 // 끊는 방법은 봇 번호 % 3으로 정해 두고 바꾸지 않는다.
-// 매번 무작위로 고르면 STALL(약 45초)에 걸린 봇이 쌓여서, 몇 초 뒤에는 거의 모든 봇이 STALL에 묶였다
+// 매번 무작위로 고르면 STALL(약 65초)에 걸린 봇이 쌓여서, 몇 초 뒤에는 거의 모든 봇이 STALL에 묶였다
 //   CLIENT_CLOSE: 입장 0.2~3초 뒤 봇이 소켓을 닫는다 (서버: network 스레드가 읽기 에러를 받고 끊는다)
 //   BAD_PACKET:   입장 0.2~3초 뒤 등록 안 된 id를 보내고 서버가 끊을 때까지 읽는다 (서버: 핸들러가 false → 끊는다)
 //   STALL:        입장하면 읽기를 멈춘다. 수신 버퍼를 작게 잡아 두어 서버 송신 큐가 넘치고 game 스레드가 끊는다
@@ -40,8 +40,8 @@ constexpr int32 MAX_LIFETIME_MS = 3000;
 // 수신 창을 작게 잡아야 서버의 송신이 빨리 막힌다
 constexpr int32 STALL_RECV_BUFFER_SIZE = 4096;
 // 서버 송신 큐 상한(Session의 MAX_SEND_QUEUE_SIZE, 약 320KB)과 커널 송신 버퍼(128KB~)가 찰 때까지 기다리는 시간.
-// TSan 서버는 세션당 약 20KB/s를 보내서(움직이는 봇 50) 20초로는 대부분 넘치지 않았다
-constexpr int32 STALL_HOLD_MS = 40000;
+// TSan 서버(움직이는 봇 50 + 반복 봇 50)에서는 커널 송신 버퍼가 차는 데만 20초 넘게 걸려 40초로도 넘치지 않을 때가 있었다
+constexpr int32 STALL_HOLD_MS = 60000;
 // 등록 안 된 id를 보낸 뒤, 또는 STALL 확인 때 서버가 끊기를 기다리는 시간
 constexpr int32 CLOSE_WAIT_MS = 5000;
 constexpr int32 RECONNECT_DELAY_MS = 100;

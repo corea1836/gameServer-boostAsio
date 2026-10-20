@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 세션 close 경쟁 검증(1-4, 1-5). TSan 서버에 움직이는 봇(DummyClient)과 접속/종료 반복 봇(ChurnClient)을 붙인다.
 # 움직이는 봇은 실행 초가 끝나면 한꺼번에 끊긴다(대량 종료). 끝나면 서버의 TSan 경고를 위치별로 묶어 보여 준다.
-# 사용법: scripts/churntest.sh [실행 초=90] [움직이는 봇 수=50] [반복 봇 수=50]
+# 사용법: scripts/churntest.sh [실행 초=120] [움직이는 봇 수=50] [반복 봇 수=50]
 #   T1_CHURN_BUILD=release 이면 TSan 없이 Release 서버로 돌린다(크래시 재현용)
 # 봇은 Release로 돌린다. 봇까지 TSan이면 느려져서 서버에 걸리는 부하가 줄어든다
 # 로그: build/churntest/server.log, move.log, churn.log
@@ -10,7 +10,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-DURATION_SEC=${1:-90}
+DURATION_SEC=${1:-120}
 MOVE_BOTS=${2:-50}
 CHURN_BOTS=${3:-50}
 OUT_DIR=build/churntest

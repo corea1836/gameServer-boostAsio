@@ -29,4 +29,4 @@ cmake -S . -B build/tsan -DT1_SANITIZE=thread && cmake --build build/tsan   # TS
 ./build/gameServer/GameServer                                  # 서버 실행 (포트 7777)
 ./build/gameServer/DummyClient [봇 수] [실행 초]                # 부하 테스트 봇 (기본 200, 끝없이)
 scripts/loadtest.sh [봇 수 ...]                                # 부하 측정 (Release, 기본 50 100 200) → docs/measurements.md
-scripts/churntest.sh [실행 초] [움직이는 봇] [반복 봇]          # 세션 close 경쟁 검증 (TSan 서버, 기본 90초 50 50, 경고 위치별 요약)
+scripts/churntest.sh [실행 초] [움직이는 봇] [반복 봇]          # 세션 close 경쟁 검증 (TSan 서버, 기본 120초 50 50, 경고 위치별 요약)
