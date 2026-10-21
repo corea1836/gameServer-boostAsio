@@ -7,10 +7,10 @@
 class GameSession : public Session
 {
     public:
+        // Functions
         GameSession(uint16 sessionId)
             : Session(sessionId)
-        {
-        }
+        {}
         ~GameSession() override {}
 
         bool OnRead(byte *readPos, int32 readSize) override;
@@ -24,13 +24,16 @@ class GameSession : public Session
             return std::static_pointer_cast<GameSession>(shared_from_this());
         }
 
-        PlayerRef GetSelectedPlayer() { return _selectdPlayer; }
+        PlayerRef GetSelectedPlayer() { return _selectedPlayer; }
+        WorldRef GetEnteredWorld() { return _enteredWorld; }
+        void SetEnteredWorld(WorldRef world) { _enteredWorld = world; }
         const std::vector<PlayerRef> &GetPlayers() const { return _players; }
         void AddPlayer(const PlayerRef player);
-        void ChoosePlayer(int32 selectedPlayerIndex);
+        bool ChoosePlayer(int32 selectedPlayerIndex);
 
     private:
-        PlayerRef _selectdPlayer;
+        PlayerRef _selectedPlayer;
+        WorldRef _enteredWorld;
         std::vector<PlayerRef> _players;
 
         int64 _dbId = 0;

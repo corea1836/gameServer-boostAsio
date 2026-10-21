@@ -20,17 +20,13 @@ void GameLoop::PostAfter(int64 tickAfter, CallbackFunc &&callback)
 
 void GameLoop::CreateWorld()
 {
-    Post(
-        [this]()
-        {
-            int64 id = _counter.fetch_add(1);
-            if (_worlds.find(id) != _worlds.end())
-                return;
-            std::shared_ptr<World> newWorld = std::make_shared<World>(id);
+    int64 id = _counter.fetch_add(1);
+    if (_worlds.find(id) != _worlds.end())
+        return;
+    std::shared_ptr<World> newWorld = std::make_shared<World>(id);
 
-            newWorld->Init();
-            _worlds.emplace(id, newWorld);
-        });
+    newWorld->Init();
+    _worlds.emplace(id, newWorld);
 }
 
 void GameLoop::RemoveWorld(int64 worldId)

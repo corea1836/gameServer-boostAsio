@@ -12,6 +12,8 @@ bool Handle_C_FindMyPlayers(GameSessionRef &session,
                             Protocol::C_FindMyPlayers &pkt)
 {
     // TODO : db load palyers form dbId;
+    if (session->GetPlayers().size() > 0)
+        return false;
 
     auto player = ActorFactory::Create<Player>();
     player->BindStats("chulsu", 1);
@@ -61,28 +63,43 @@ bool Handle_C_FindMyPlayers(GameSessionRef &session,
 
 bool Handle_C_EnterWorld(GameSessionRef &session, Protocol::C_EnterWorld &pkt)
 {
-    session->ChoosePlayer(pkt.selected_player_index());
+    if (session->GetEnteredWorld() != nullptr)
+        return false;
 
-    GGameLoop.EnterWorld(0, session->GetSelectedPlayer());
+    if (session->ChoosePlayer(pkt.selected_player_index()) == false)
+        return false;
+
+    PlayerRef player = session->GetSelectedPlayer();
+
+    WorldRef world = GGameLoop.FindWorld(0);
+
+    if (world == nullptr)
+        return true;
+
+    session->SetEnteredWorld(world);
+
+    world->Post([world, player]() { world->EnterPlayer(player); });
+
     return true;
 }
 
 bool Handle_C_LeaveWorld(GameSessionRef &session, Protocol::C_LeaveWorld &pkt)
 {
-    if (session == nullptr || !session->IsConnected())
+    if (session == nullptr)
         return true;
 
     PlayerRef player = session->GetSelectedPlayer();
 
     if (player == nullptr)
-        return true;
+        return false;
 
-    WorldRef world = player->GetWorld();
+    WorldRef world = session->GetEnteredWorld();
 
     if (world == nullptr)
-        return true;
+        return false;
 
     world->LeavePlayer(player->GetActorInfo().actorId);
+    session->SetEnteredWorld(nullptr);
 
     return true;
 }
@@ -99,11 +116,11 @@ bool Handle_C_Move(GameSessionRef &session, Protocol::C_Move &pkt)
     PlayerRef player = session->GetSelectedPlayer();
 
     if (player == nullptr)
-        return true;
+        return false;
 
-    WorldRef world = player->GetWorld();
+    WorldRef world = session->GetEnteredWorld();
     if (world == nullptr)
-        return true;
+        return false;
 
     MoveInfo moveInfo = {Vector3{pkt.move_data().direction_x(),
                                  pkt.move_data().direction_y(),

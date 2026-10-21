@@ -92,3 +92,38 @@
 - Release 서버 120초: 봇이 닫기 1198회, 잘못된 패킷 1172회, 오버플로 16회, 크래시 없음
 - STALL 대기를 40초 → 60초, 기본 실행 시간을 90초 → 120초로 늘렸다. strand 적용 뒤 TSan 서버(봇 50 + 50)에서는 STALL 세션의 커널 송신 큐(약 147KB)가 차는 데만 20초 넘게 걸려, 40초 대기로는 서버 큐(320KB)가 넘치기 전에 확인하게 되어 오버플로 경로가 검사되지 않았다(2번 연속 0/16). 봇 3개 TSan, Release에서는 40초로도 끊겼다.
 - "전"에 1건 나오던 asio reactor 내부 경고(`kqueue_reactor::run`이 `conditionally_enabled_mutex::enabled_`를 락 없이 읽음)는 이번 120초 실행에서는 나오지 않았고, strand 적용 뒤 봇 3개 실행에서는 1건 나왔다. asio 소스(`kqueue_reactor.ipp:494`)를 보면 accept 스레드가 만든 descriptor_state를 network 스레드가 kevent가 돌려준 포인터로 읽고, 둘 사이의 순서는 커널만 보장한다. TSan이 볼 수 없는 순서라 오탐으로 본다.
+
+## 1-5 게임 상태 레이스 전후
+
+**환경**: 1-4와 같다. `scripts/churntest.sh`(TSan 서버, 움직이는 봇 50 + 반복 봇 50)
+- 반복 봇에 입장 중 끊기(`ENTER_CLOSE`: `C_EnterWorld`를 보내고 0~10ms 안에 닫기)를 더해 끊는 방법을 4분의 1씩 나눴다(봇이 닫기 13, 잘못된 패킷 13, STALL 12, 입장 중 끊기 12자리)
+- 봇이 다 끊긴 뒤 8초 기다려 마지막 존 지표의 `players=`를 본다. 0이 아니면 세션 없이 World에 남은 유령이다
+
+### 전 (2026-10-21, `ba92642` + 입장 중 끊기 봇)
+
+- TSan 60초 1번: 입장 중 끊기 31회 만에 SEGV. `GameSession::OnDisconnected`(`GameSession.cpp:23`)가 아직 World에 들어가지 않은 플레이어의 `GetWorld()`(null)에 `LeavePlayer`를 불렀다. 1-4 "전"의 90초 크래시와 같은 원인이다
+- `OnDisconnected`에 world null 체크를 넣은 뒤 TSan 60초: 크래시 없음(입장 중 끊기 6824회), 끝난 뒤 존 인원 0명, TSan 경고 6건
+
+| 분류 | 건수 | 내용 |
+|---|---|---|
+| `Actor::_world` | 4 | 세션 strand의 `OnDisconnected` → `Actor::GetWorld()`(`Actor.h:76`)와 game 스레드의 `World::EnterPlayer` → `Actor::EnterWorld`(`Actor.h:56`). 입장은 strand → GameLoop 큐 → World 큐를 거쳐 적히고, strand는 그 값을 읽는다 |
+| `GameSession::_selectdPlayer` | 2 | strand의 `OnDisconnected`가 null로 쓰는 것과 game 스레드의 `World::EnterPlayer`(`World.cpp:136`)가 `GetSelectedPlayer()`로 읽는 것 |
+
+- null 체크 뒤의 존 인원 0명은 보장이 아니다. 입장 쪽지가 World에 닿기 전에 끊기면 `OnDisconnected`는 World를 못 찾아 퇴장을 보내지 않는다. 이번에는 입장 처리 때 세션이 이미 사라져 `EnterPlayer`가 명단에 넣기 전에 돌아갔을 뿐이고, 세션 객체가 살아 있으면 명단에 들어가 유령이 된다(코드 근거, 실행에서는 나오지 않았다)
+- `World.cpp:136`을 인자 `player`로 바꾼 뒤 TSan 60초: `_selectdPlayer` 2건이 사라지고 `Actor::_world` 4건만 남았다
+
+### 후 (2026-10-21, 세션 메모 적용)
+
+세션 strand가 입장 쪽지를 보내는 순간 `GameSession::_enteredWorld`에 적고, 끊기·나가기·이동은 그 값을 보고 같은 World 큐에 바로 Post한다. strand는 `Actor::_world`를 읽지 않는다. 월드 목록은 접속을 받기 전에 채우고 그 뒤로 바꾸지 않는다
+
+- TSan 60초 2번: 크래시 없음(입장 중 끊기 6823회, 6821회), TSan 경고 0건, 끝난 뒤 존 인원 0명
+- TSan 120초(기본값): 봇이 닫기 894회, 잘못된 패킷으로 서버가 끊기 904회, 오버플로로 서버가 끊기 12회(STALL 12자리 전부), 입장 중 끊기 13669회. 크래시 없음, 끝난 뒤 존 인원 0명
+- 120초 실행의 TSan 경고 1건은 1-4 "후"에서 오탐으로 본 asio reactor 내부 경고와 같다(`kqueue_reactor.ipp:494`가 accept 스레드가 만든 descriptor_state의 mutex를 읽음). 스택에 프로젝트 코드가 없다. 스크립트는 경고 수만 세서 이 실행을 실패(종료 코드 1)로 끝냈다
+
+### 후 + 상태 규칙 (2026-10-22)
+
+strand가 상태(목록 없음 → 목록 받음 → 월드 안)를 판단해 맞지 않는 패킷은 끊고, 끊기로 한 세션의 패킷은 `OnRead`에서 처리하지 않는다(ADR-021)
+
+- TSan 60초: 크래시 없음(입장 중 끊기 6824회), TSan 경고 0건, 끝난 뒤 존 인원 0명
+- TSan 120초(기본값): 봇이 닫기 890회, 잘못된 패킷으로 서버가 끊기 921회, 오버플로로 서버가 끊기 12회(STALL 12자리 전부), 입장 중 끊기 13671회. 크래시 없음, TSan 경고 0건, 끝난 뒤 존 인원 0명. 스크립트 종료 코드 0
+- 정상 흐름이 위반으로 끊기지 않았다: 움직이는 봇 `disconnected=0`, 반복 봇 `unexpected_close=0`

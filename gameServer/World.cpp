@@ -133,7 +133,7 @@ void World::EnterPlayer(PlayerRef player)
         Protocol::S_EnterWorld pkt;
 
         *pkt.mutable_selected_player_data()->mutable_player_data() =
-            session->GetSelectedPlayer()->ToProto();
+            player->ToProto();
 
         SendBufferRef sendBuffer =
             PacketHandler::MakeSendBuffer(pkt, PKT_S_EnterWorld);

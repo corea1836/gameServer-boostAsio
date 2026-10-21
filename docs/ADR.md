@@ -165,3 +165,37 @@
 **결정**: 서버 내장 지표(1-8), DummyClient 봇(1-9), strand 비교 벤치(1-10)로 측정하고, 결과를 `docs/measurements.md`에 누적한다.
 **이유**: 면접 주장은 측정 수치로만 뒷받침한다.
 **트레이드오프**: 측정 도구를 만드는 비용이 든다(Claude 담당 인프라로 분리).
+
+### ADR-021: 세션 상태는 세션 strand, 존 상태는 존 큐가 소유한다
+**상태**: 확정 (2026-10-21~22, 1-5)
+**결정**:
+- "플레이어를 어느 World로 보냈나"를 `GameSession::_enteredWorld`(세션 메모)에 적는다. 세션 strand가 입장 쪽지를 보내는 순간 적고, 이동·나가기·끊기는 그 값을 보고 같은 World 큐에 바로 Post한다. 나가기와 끊기에서 비운다.
+- `GameSession` 멤버는 세션 strand만, `Actor` 멤버(`_world` 포함)는 그 존의 JobSerializer만 읽고 쓴다. World 잡은 세션 필드를 읽지 않고 인자로 받은 값을 쓴다.
+- strand 위에서는 O(1) 판단과 Post만 한다. 명단을 보거나 플레이어 수만큼 도는 일은 World 큐에서 한다.
+- 월드 목록(`GameLoop::_worlds`)은 접속을 받기 전(스레드 시작 전)에 채우고 그 뒤로 바꾸지 않는다. strand는 락 없이 `FindWorld`로 읽는다.
+- 상태 규칙은 strand가 판단하고, 상태에 맞지 않는 패킷은 위반으로 끊는다. 상태는 기존 필드로 구분한다(`_players`가 비었나, `_enteredWorld`가 있나).
+
+| 패킷 | 허용 상태 | 처리 후 |
+|---|---|---|
+| `C_FindMyPlayers` | 목록 없음 | 목록 받음 |
+| `C_EnterWorld`(올바른 index) | 목록 받음 | 월드 안 |
+| `C_Move` | 월드 안 | 월드 안 |
+| `C_LeaveWorld` | 월드 안 | 목록 받음 |
+
+- 끊기로 한 세션(`IsConnected() == false`)의 패킷은 `OnRead`에서 처리하지 않는다. `Disconnect()`는 플래그만 바로 내리고 정리(`OnDisconnected`)는 strand에 post하므로, 그 뒤에 도착한 읽기 결과가 `OnDisconnected` 다음에 처리되면 퇴장을 보낼 곳이 없는 입장이 생긴다(코드 추론, 실행에서 관찰되지는 않았다).
+
+**이유**:
+- 퇴장을 보낼지 정하려면 "입장을 보냈나"를 알아야 하는데, 예전에는 "World가 입장을 끝냈나"(`Actor::_world`, World 큐가 적는 값)를 strand가 읽었다. 입장은 strand → GameLoop 큐 → World 큐로 두 번 갈아타고 퇴장은 World 큐로 바로 가서, 입장 중에 끊기면 null World로 크래시가 나거나 퇴장을 보내지 않아 유령이 생길 수 있었다. 다른 스레드가 쓰는 값을 읽어 TSan 경고도 났다(measurements 1-5).
+- 메모는 보내는 순간 적으므로 늦지 않고, 같은 strand가 같은 World 큐에 넣으므로 입장 → 퇴장 순서가 보장된다.
+- 검토한 대안: 모든 쪽지를 GameLoop 큐를 거쳐 World로 보낸다. 같은 FIFO 경로라 순서는 보장되지만, 모든 이동 패킷이 큐 하나를 지나서 존이 늘면 병목 후보가 되고 이동이 2홉이 된다.
+- `Actor::_world`를 strand 소유로 바꾸지 않았다. Player의 나머지 상태(위치, `MoveInfo`)는 World 큐 소유라 필드마다 주인이 달라지고, 몬스터도 Actor인데 세션이 없다.
+- 상태 판단을 strand에 둔 이유: strand는 클라가 보낸 순서 그대로 패킷을 본다. 1-3에서 "정상 클라도 타이밍상 보낼 수 있다"며 무시한 것은 World가 늦게 적는 값을 봤기 때문이고, 메모를 보면 그런 타이밍이 없다. 정상 클라는 접속당 `C_FindMyPlayers` 1번 → `C_EnterWorld` 1번 → `C_Move` 반복이고 `C_LeaveWorld`는 보내지 않는다.
+
+**트레이드오프**:
+- 메모는 "보낸 곳"이지 "실제로 있는 곳"이 아니다. 진짜 명단은 `World::_players`다. World가 입장을 거절해도 메모는 남지만, 퇴장은 명단에서 못 찾고 끝나 안전하다. 존 이동(R5)이 생기면 World 잡이 대상이 자기 명단에 있는지 먼저 확인해야 한다(`HandleMove_Internal`은 지금 확인하지 않는다).
+- 서버가 도는 중에 월드를 만들거나 지울 수 없다. `CreateWorld`/`RemoveWorld`는 스레드 시작 전에만 부른다. 채널·인스턴스(R5)에서 다시 정한다.
+- 서버가 먼저 플레이어를 월드에서 빼는 경로(강제 퇴장, 존 이동)가 생기면 클라가 이미 보낸 패킷이 위반으로 끊길 수 있다. R5의 "이동 중에 도착한 패킷" 결정에 넣는다.
+- `C_FindMyPlayers`는 접속당 1번만 허용한다. 로비로 돌아가는 기능(R9)이 생기면 다시 정한다.
+- World 람다의 raw `this` 캡처는 월드가 서버 종료까지 살아 있어 잠재 문제로 남긴다(R5에서 월드를 지울 때 처리).
+
+**검증**: `tests/SessionStateTest.cpp`(상태 규칙), `scripts/churntest.sh`(measurements 1-5)

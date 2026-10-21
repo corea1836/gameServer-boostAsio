@@ -7,6 +7,9 @@
 // Network
 bool GameSession::OnRead(byte *readPos, int32 readSize)
 {
+    if (IsConnected() == false)
+        return false;
+
     GameSessionRef session = GetGameSession();
     bool handleResult = PacketHandler::HandlePacket(session, readPos, readSize);
 
@@ -17,11 +20,14 @@ void GameSession::OnConnected() {}
 
 void GameSession::OnDisconnected()
 {
-    if (_selectdPlayer != nullptr)
+    if (_selectedPlayer != nullptr)
     {
-        WorldRef world = _selectdPlayer->GetWorld();
-        world->LeavePlayer(_selectdPlayer->GetActorInfo().actorId);
-        _selectdPlayer = nullptr;
+        if (_enteredWorld != nullptr) {
+            _enteredWorld->LeavePlayer(_selectedPlayer->GetActorInfo().actorId);
+            _enteredWorld = nullptr;
+        }
+
+        _selectedPlayer = nullptr;
     }
 
     _players.clear();
@@ -40,13 +46,16 @@ void GameSession::AddPlayer(const PlayerRef player)
     _players.push_back(player);
 }
 
-void GameSession::ChoosePlayer(int32 selectedPlayerIndex)
+bool GameSession::ChoosePlayer(int32 selectedPlayerIndex)
 {
     if (selectedPlayerIndex >= 0 && selectedPlayerIndex < _players.size() &&
         _players[selectedPlayerIndex])
     {
         PlayerRef player = _players[selectedPlayerIndex];
 
-        _selectdPlayer = player;
+        _selectedPlayer = player;
+        return true;
     }
+
+    return false;
 }

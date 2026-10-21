@@ -8,6 +8,7 @@
 class GameLoop
 {
     public:
+        // Functions
         GameLoop();
         ~GameLoop() = default;
 
@@ -20,6 +21,10 @@ class GameLoop
         void EnterWorld(int64 worldId, PlayerRef player);
         void LeaveWorld(PlayerRef player);
         void MoveWorld(int64 worldId, PlayerRef player);
+        WorldRef FindWorld(int64 worldId) const
+        {
+            return FindWorld_Internal(worldId);
+        }
 
     private:
         void EnterWorld_Internal(int64 worldId, PlayerRef player);
