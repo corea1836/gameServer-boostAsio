@@ -82,7 +82,7 @@ void ZoneMetrics::RecordTick(std::chrono::steady_clock::duration elapsed)
     _tickUs.push_back(ToUs(elapsed));
 }
 
-void ZoneMetrics::ReportIfDue(int64 zoneId, int64 missCount, JobSerializer &jobs)
+void ZoneMetrics::ReportIfDue(int64 zoneId, int64 playerCount, int64 missCount, JobSerializer &jobs)
 {
     auto now = std::chrono::steady_clock::now();
     if (now - _lastReportTime < std::chrono::milliseconds(Metrics::REPORT_INTERVAL_MS))
@@ -93,7 +93,7 @@ void ZoneMetrics::ReportIfDue(int64 zoneId, int64 missCount, JobSerializer &jobs
     std::vector<int64> waitUs = jobs.TakeWaitSamplesUs();
 
     std::ostringstream line;
-    line << "[Metrics] zone=" << zoneId << " ticks=" << _tickUs.size()
+    line << "[Metrics] zone=" << zoneId << " players=" << playerCount << " ticks=" << _tickUs.size()
          << " tick_us(p50/p99/max)=" << FormatPercentiles(_tickUs)
          << " miss=" << missCount - _lastMissCount << " jobs=" << waitUs.size()
          << " job_wait_us(p50/p99/max)=" << FormatPercentiles(waitUs);

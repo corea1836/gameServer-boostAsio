@@ -40,8 +40,8 @@ churn_pid=$!
 
 wait "$move_pid" || true
 wait "$churn_pid" || true
-# 서버가 대량 종료를 처리할 시간
-sleep 3
+# 서버가 대량 종료를 처리하고, 그 뒤 존 지표(5초마다)가 한 번 더 찍힐 시간
+sleep 8
 
 failed=0
 if kill -0 "$server_pid" 2> /dev/null; then
@@ -63,6 +63,13 @@ echo "== TSan 경고 ${warnings}건 (위치별)"
 grep "^SUMMARY: ThreadSanitizer" "$OUT_DIR/server.log" | sed "s|$PWD/||" | sort | uniq -c | sort -rn || true
 
 if [ "$warnings" -gt 0 ]; then
+    failed=1
+fi
+
+# 봇이 다 끊긴 뒤의 존 인원. 0이 아니면 세션 없이 World에 남은 유령 플레이어다(1-5)
+players=$(grep "^\[Metrics\] zone=" "$OUT_DIR/server.log" | tail -n 1 | sed -n 's/.* players=\([0-9]*\).*/\1/p')
+echo "== 끝난 뒤 존 인원 ${players:-?}명"
+if [ "${players:-1}" != 0 ]; then
     failed=1
 fi
 exit "$failed"

@@ -48,7 +48,7 @@ void World::Tick()
     MulticastMove(now);
 
     _metrics.RecordTick(std::chrono::steady_clock::now() - tickStart);
-    _metrics.ReportIfDue(_worldId, _fixedTicker->GetMissCount(), *_jobs);
+    _metrics.ReportIfDue(_worldId, static_cast<int64>(_players.size()), _fixedTicker->GetMissCount(), *_jobs);
 }
 
 void World::UpdatePosition(float deltaTime)

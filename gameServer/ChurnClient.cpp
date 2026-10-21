@@ -1,14 +1,16 @@
 // 접속/종료 반복 봇(1-4 세션 close 경쟁 검증. 1-5에도 쓴다).
 // 사용법: ChurnClient [동시 봇 수=50] [실행 초=0(끝없이)] [host=127.0.0.1] [port=7777]
 // 봇마다 접속 → C_FindMyPlayers + C_EnterWorld(0) → S_EnterWorld를 받으면 → 끊기 → 다시 접속을 반복한다.
-// 끊는 방법은 봇 번호 % 3으로 정해 두고 바꾸지 않는다.
+// 끊는 방법은 봇 번호 % 4로 정해 두고 바꾸지 않는다.
 // 매번 무작위로 고르면 STALL(약 65초)에 걸린 봇이 쌓여서, 몇 초 뒤에는 거의 모든 봇이 STALL에 묶였다
 //   CLIENT_CLOSE: 입장 0.2~3초 뒤 봇이 소켓을 닫는다 (서버: network 스레드가 읽기 에러를 받고 끊는다)
 //   BAD_PACKET:   입장 0.2~3초 뒤 등록 안 된 id를 보내고 서버가 끊을 때까지 읽는다 (서버: 핸들러가 false → 끊는다)
 //   STALL:        입장하면 읽기를 멈춘다. 수신 버퍼를 작게 잡아 두어 서버 송신 큐가 넘치고 game 스레드가 끊는다
 //                 (서버: Send 오버플로). STALL_HOLD_MS 뒤에 쌓인 데이터를 읽어 서버가 끊었는지(EOF) 확인한다
-// 입장이 끝난 뒤에만 끊는다. 입장 중에 끊으면 GameSession::OnDisconnected가 null World를 건드려
-// 서버가 바로 죽는데(1-5), 그러면 1-4 검증이 가려진다. 입장 중 끊기는 1-5 검증 때 추가한다.
+//   ENTER_CLOSE:  C_EnterWorld를 보내고 0~MAX_ENTER_CLOSE_MS 안에 닫는다(1-5). 서버가 세션 strand에서 플레이어를
+//                 고른 뒤 World 큐에서 입장시키기 전에 끊기를 노린다. S_EnterWorld를 먼저 받아도 그대로 닫는다
+// 앞의 셋은 입장이 끝난 뒤에 끊는다. 입장 중 끊기로 서버가 죽으면 1-4 검증이 가려지므로, 1-4만 보려면
+// ENTER_CLOSE가 서버를 죽이지 않는 상태(1-5 이후)에서 돌린다.
 // STALL 봇에게 서버가 계속 보내려면 다른 봇이 움직여야 한다(DummyClient를 같이 띄운다, scripts/churntest.sh).
 // 서버 Session을 쓰지 않고 소켓을 직접 다룬다. 1-4에서 Session을 고치는 동안에도 봇의 동작이 바뀌지 않는다.
 // 봇 하나의 소켓과 타이머는 그 봇의 strand 위에서만 만진다
@@ -44,6 +46,8 @@ constexpr int32 STALL_RECV_BUFFER_SIZE = 4096;
 constexpr int32 STALL_HOLD_MS = 60000;
 // 등록 안 된 id를 보낸 뒤, 또는 STALL 확인 때 서버가 끊기를 기다리는 시간
 constexpr int32 CLOSE_WAIT_MS = 5000;
+// 로컬 서버는 핸드셰이크를 받고 수 ms 안에 입장시키므로 그 안에 닫는다
+constexpr int32 MAX_ENTER_CLOSE_MS = 10;
 constexpr int32 RECONNECT_DELAY_MS = 100;
 constexpr int32 CONNECT_FAIL_DELAY_MS = 1000;
 constexpr int64 STATUS_INTERVAL_MS = 5000;
@@ -54,12 +58,14 @@ enum class Mode : int32
     CLIENT_CLOSE,
     BAD_PACKET,
     STALL,
+    ENTER_CLOSE,
     COUNT,
 };
 
 enum class Result : int32
 {
     CLIENT_CLOSED,
+    ENTER_CLOSED,
     BAD_PACKET_CLOSED,
     BAD_PACKET_NOT_CLOSED,
     STALL_CLOSED,
@@ -71,7 +77,7 @@ enum class Result : int32
 };
 
 const char *RESULT_NAMES[] = {
-    "client_closed",    "bad_packet_closed", "bad_packet_not_closed",
+    "client_closed",    "enter_closed",      "bad_packet_closed", "bad_packet_not_closed",
     "stall_closed",     "stall_not_closed",  "unexpected_close",
     "connect_fail",
 };
@@ -169,6 +175,10 @@ class ChurnBot : public std::enable_shared_from_this<ChurnBot>
                         return;
                     }
 
+                    if (self->_mode == Mode::ENTER_CLOSE)
+                        self->WaitTimer(std::uniform_int_distribution<int32>(
+                            0, MAX_ENTER_CLOSE_MS)(self->_random));
+
                     self->Read();
                 });
         }
@@ -237,6 +247,10 @@ class ChurnBot : public std::enable_shared_from_this<ChurnBot>
         {
             _entered = true;
 
+            // 핸드셰이크를 보낼 때 건 타이머로 닫는다
+            if (_mode == Mode::ENTER_CLOSE)
+                return;
+
             int32 waitMs = _mode == Mode::STALL
                                ? STALL_HOLD_MS
                                : std::uniform_int_distribution<int32>(
@@ -271,6 +285,9 @@ class ChurnBot : public std::enable_shared_from_this<ChurnBot>
             {
             case Mode::CLIENT_CLOSE:
                 Finish(Result::CLIENT_CLOSED);
+                return;
+            case Mode::ENTER_CLOSE:
+                Finish(Result::ENTER_CLOSED);
                 return;
             case Mode::BAD_PACKET:
                 SendBadPacket();

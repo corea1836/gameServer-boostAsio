@@ -37,8 +37,9 @@ class ZoneMetrics
 {
     public:
         void RecordTick(std::chrono::steady_clock::duration elapsed);
-        // 마지막 보고 뒤 REPORT_INTERVAL_MS가 지났으면 로그를 남기고 구간을 비운다
-        void ReportIfDue(int64 zoneId, int64 missCount, JobSerializer &jobs);
+        // 마지막 보고 뒤 REPORT_INTERVAL_MS가 지났으면 로그를 남기고 구간을 비운다.
+        // playerCount는 존 인원이다. 봇이 다 끊긴 뒤에도 0이 아니면 유령 플레이어가 남은 것이다(1-5)
+        void ReportIfDue(int64 zoneId, int64 playerCount, int64 missCount, JobSerializer &jobs);
 
     private:
         std::vector<int64> _tickUs;
