@@ -40,7 +40,7 @@ class Session : public std::enable_shared_from_this<Session>
     private:
         void OnRecv(int32 recvSize);
         void Write();
-        void DoDisconnect();
+        void Disconnect_Internal();
 
         int64 _id = 0;
         boost_tcp::socket _socket;

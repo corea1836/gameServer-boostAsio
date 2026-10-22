@@ -37,11 +37,11 @@ void Session::Disconnect()
 
     boost::asio::post(_socket.get_executor(), [session = GetSession()]()
     {
-        session->DoDisconnect();
+        session->Disconnect_Internal();
     });
 }
 
-void Session::DoDisconnect()
+void Session::Disconnect_Internal()
 {
     boost_error_code ec;
 
