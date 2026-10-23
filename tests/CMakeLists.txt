@@ -14,6 +14,7 @@ add_executable(T1Tests
     PacketHandlerTest.cpp
     MetricsTest.cpp
     SessionStateTest.cpp
+    VisibilityTest.cpp
 )
 
 target_link_libraries(T1Tests PRIVATE

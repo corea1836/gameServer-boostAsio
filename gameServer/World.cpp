@@ -9,6 +9,7 @@
 #include "Player.h"
 #include "TimeUtils.h"
 #include "Types.h"
+#include "Visibility.h"
 #include "protobuf/Struct.pb.h"
 #include <JobSerializer.h>
 #include <algorithm>
@@ -45,6 +46,9 @@ void World::Tick()
 
     UpdatePosition(TICK_INTERVAL_MS / 1000.f);
 
+    // S_Spawn이 같은 틱의 S_Move보다 먼저 나가도록 이동 전송 전에 갱신한다
+    RefreshVisibility();
+
     MulticastMove(now);
 
     _metrics.RecordTick(std::chrono::steady_clock::now() - tickStart);
@@ -65,6 +69,44 @@ void World::UpdatePosition(float deltaTime)
 
             // TODO : CanGo
             player->GetCurrentPositionInfo().position = next;
+        }
+    }
+}
+
+void World::RefreshVisibility()
+{
+    std::vector<std::pair<int64, Vector3>> candidates;
+    candidates.reserve(_players.size());
+    for (auto &[id, player] : _players)
+        candidates.emplace_back(id, player->GetCurrentPositionInfo().position);
+
+    for (auto &[id, player] : _players)
+    {
+        VisibilityDiff diff = UpdateVisibility(player->GetVisible(), id, player->GetCurrentPositionInfo().position,
+                                               candidates, VISIBLE_ENTER_RADIUS, VISIBLE_LEAVE_RADIUS);
+
+        GameSessionRef session = player->GetSession();
+        if (session == nullptr)
+            continue;
+
+        if (!diff.entered.empty())
+        {
+            Protocol::S_Spawn pkt;
+            for (int64 enteredId : diff.entered)
+                pkt.mutable_players()->Add(FindPlayer(enteredId)->ToProto());
+
+            SendBufferRef sendBuffer = PacketHandler::MakeSendBuffer(pkt, PKT_S_Spawn);
+            session->Send(sendBuffer);
+        }
+
+        if (!diff.left.empty())
+        {
+            Protocol::S_Despawn pkt;
+            for (int64 leftId : diff.left)
+                pkt.mutable_actor_ids()->Add(leftId);
+
+            SendBufferRef sendBuffer = PacketHandler::MakeSendBuffer(pkt, PKT_S_Despawn);
+            session->Send(sendBuffer);
         }
     }
 }
@@ -94,13 +136,24 @@ void World::MulticastMove(int64 now)
         pkt.set_server_time(now);
 
         SendBufferRef buffer = PacketHandler::MakeSendBuffer(pkt, PKT_S_Move);
-        for (auto [k, other] : _players)
+
+        // 내 캐릭터도 S_Move를 재생하므로 자기 자신에게도 보낸다
+        GameSessionRef session = player->GetSession();
+        if (session != nullptr)
+            session->Send(buffer);
+
+        // 모두 같은 반경으로 같은 틱에 갱신해서, 내가 보는 사람 = 나를 보는 사람이다
+        for (int64 watcherId : player->GetVisible())
         {
-            GameSessionRef otherSession = other->GetSession();
-            if (otherSession == nullptr)
+            PlayerRef watcher = FindPlayer(watcherId);
+            if (watcher == nullptr)
                 continue;
 
-            otherSession->Send(buffer);
+            GameSessionRef watcherSession = watcher->GetSession();
+            if (watcherSession == nullptr)
+                continue;
+
+            watcherSession->Send(buffer);
         }
 
 
@@ -141,35 +194,10 @@ void World::EnterPlayer(PlayerRef player)
         session->Send(sendBuffer);
     }
 
-    if (!_players.empty())
-    {
-        Protocol::S_Spawn pkt;
-        for (auto &[key, otherPlayer] : _players)
-        {
-            pkt.mutable_players()->Add(otherPlayer->ToProto());
-        }
-        SendBufferRef sendBuffer =
-            PacketHandler::MakeSendBuffer(pkt, PKT_S_Spawn);
-        session->Send(sendBuffer);
-    }
-
+    // 주변 플레이어와 주고받는 S_Spawn은 다음 틱의 RefreshVisibility가 보낸다.
+    // 나갔다가 같은 Player로 다시 들어올 수 있어서 이전 목록을 비운다
+    player->GetVisible().clear();
     _players.emplace(player->GetActorInfo().actorId, player);
-
-    {
-        Protocol::S_Spawn pkt;
-        pkt.mutable_players()->Add(player->ToProto());
-
-        SendBufferRef sendBuffer =
-            PacketHandler::MakeSendBuffer(pkt, PKT_S_Spawn);
-
-        for (auto &[key, otherPlayer] : _players)
-        {
-            GameSessionRef otherSession = otherPlayer->GetSession();
-            if (otherSession == nullptr || otherPlayer->GetActorInfo().actorId == player->GetActorInfo().actorId)
-                continue;
-            otherSession->Send(sendBuffer);
-        }
-    }
 }
 
 void World::LeavePlayer(int64 playerId)
@@ -201,20 +229,7 @@ void World::LeavePlayer_Internal(int64 playerId)
         session->Send(sendBuffer);
     }
 
-    {
-        Protocol::S_Despawn pkt;
-        pkt.mutable_actor_ids()->Add(playerId);
-        SendBufferRef sendBuffer =
-            PacketHandler::MakeSendBuffer(pkt, PKT_S_Despawn);
-
-        for (auto &[key, otherPlayer] : _players)
-        {
-            GameSessionRef otherSession = otherPlayer->GetSession();
-            if (otherSession == nullptr)
-                continue;
-            otherSession->Send(sendBuffer);
-        }
-    }
+    // 보고 있던 사람들의 S_Despawn은 다음 틱의 RefreshVisibility가 보낸다(목록에서 사라진 대상은 나간다)
 }
 
 void World::HandleMove_Internal(PlayerRef player, MoveInfo nextMove)

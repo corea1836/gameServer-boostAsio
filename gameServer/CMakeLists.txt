@@ -26,6 +26,7 @@ add_library(gameServerLib STATIC
     GameManager.cpp
     Player.cpp
     World.cpp
+    Visibility.cpp
     ${COMMON_SOURCES}
 )
 

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # 부하 측정(1-11). Release 빌드로 서버와 봇을 같은 머신에 띄우고 서버의 [Metrics] 로그를 모은다.
-# 사용법: scripts/loadtest.sh [봇 수 ...]   (기본: 50 100 200, 봇 수마다 30초)
+# 사용법: [DURATION_SEC=초] [OUT_DIR=경로] scripts/loadtest.sh [봇 수 ...]   (기본: 50 100 200, 봇 수마다 30초)
 # 로그: build/loadtest/server-<봇 수>.log, build/loadtest/bot-<봇 수>.log
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 BUILD_DIR=build/release
-OUT_DIR=build/loadtest
-DURATION_SEC=30
+OUT_DIR=${OUT_DIR:-build/loadtest}
+DURATION_SEC=${DURATION_SEC:-30}
 
 COUNTS=("$@")
 if [ ${#COUNTS[@]} -eq 0 ]; then
@@ -34,4 +34,5 @@ for count in "${COUNTS[@]}"; do
 
     echo "== 봇 $count"
     grep "^\[Metrics\]" "$OUT_DIR/server-$count.log" || true
+    grep "^\[Bot\]" "$OUT_DIR/bot-$count.log" | tail -1 || true
 done

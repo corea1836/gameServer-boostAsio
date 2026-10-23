@@ -3,6 +3,7 @@
 #include "Character.h"
 #include "GameTypes.h"
 #include "protobuf/Enum.pb.h"
+#include <unordered_set>
 
 class Player : public Character
 {
@@ -28,6 +29,10 @@ class Player : public Character
 
         GameSessionRef GetSession() { return _session.lock(); }
 
+        // AOI: 지금 보고 있는 플레이어 id. World 큐에서만 읽고 쓴다(ADR-022)
+        std::unordered_set<int64> &GetVisible() { return _visible; }
+
     protected:
         GameSessionWeakRef _session;
+        std::unordered_set<int64> _visible;
 };

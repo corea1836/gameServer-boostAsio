@@ -47,8 +47,25 @@ void BotPacketHandler::Init()
     };
 
     GBotPacketHandler[PKT_S_LeaveWorld] = Ignore;
-    GBotPacketHandler[PKT_S_Spawn] = Ignore;
-    GBotPacketHandler[PKT_S_Despawn] = Ignore;
+    GBotPacketHandler[PKT_S_Spawn] = [](BotSessionRef &, byte *buffer, int32 size)
+    {
+        Protocol::S_Spawn pkt;
+        if (!Parse(pkt, buffer, size))
+            return false;
+
+        BotStats::SSpawned.fetch_add(pkt.players_size());
+        return true;
+    };
+
+    GBotPacketHandler[PKT_S_Despawn] = [](BotSessionRef &, byte *buffer, int32 size)
+    {
+        Protocol::S_Despawn pkt;
+        if (!Parse(pkt, buffer, size))
+            return false;
+
+        BotStats::SDespawned.fetch_add(pkt.actor_ids_size());
+        return true;
+    };
     GBotPacketHandler[PKT_S_Move] = Ignore;
 }
 

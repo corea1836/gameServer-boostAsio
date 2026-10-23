@@ -18,9 +18,11 @@ constexpr int64 STATUS_INTERVAL_MS = 5000;
 
 void PrintStatus(int32 botCount)
 {
-    std::printf("[Bot] connected=%d/%d entered=%d disconnected=%d\n",
+    std::printf("[Bot] connected=%d/%d entered=%d disconnected=%d spawned=%lld despawned=%lld\n",
                 BotStats::SConnected.load(), botCount, BotStats::SEntered.load(),
-                BotStats::SDisconnected.load());
+                BotStats::SDisconnected.load(),
+                static_cast<long long>(BotStats::SSpawned.load()),
+                static_cast<long long>(BotStats::SDespawned.load()));
     std::fflush(stdout);
 }
 

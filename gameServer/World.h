@@ -11,6 +11,9 @@ class World : public std::enable_shared_from_this<World>
 {
     public:
         static constexpr int64 TICK_INTERVAL_MS = 50;
+        // AOI 반경(ADR-022). 거리 <= ENTER면 보이기 시작하고, > LEAVE면 안 보인다
+        static constexpr float VISIBLE_ENTER_RADIUS = 22.f;
+        static constexpr float VISIBLE_LEAVE_RADIUS = 24.f;
         World(int64 worldId);
         ~World();
 
@@ -36,6 +39,7 @@ class World : public std::enable_shared_from_this<World>
 
         void Tick();
         void UpdatePosition(float deltaTime);
+        void RefreshVisibility();
         void MulticastMove(int64 now);
 
         void LeavePlayer_Internal(int64 playerId);
